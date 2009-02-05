@@ -131,7 +131,7 @@ $
       (li () (a (href ,(string (git-repo-http hack) "/tarball/master")) "download a tarball of arc2 with this patch applied"))
       )
     (h2 () "Applying This Hack to Your Arc")
-    (p () "By using patch or git, you can incorporate this patch into your version of Arc, even if you already have other patches and changes applied.")
+    (p () "By using patch or git, you can incorporate this patch into your version of Arc.")
     (h3 () "With patch")
     (p ()
       "To apply this patch to your copy of arc using the patch command, download "
