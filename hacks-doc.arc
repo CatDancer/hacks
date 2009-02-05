@@ -57,7 +57,26 @@ arc> (mz:port? 4)
   `((p () "In arc2 the <code>date</code> function is implemented by running the operating system&rsquo;s <code>date</code> command.  Unfortunately the <code>date</code> command in different operating systems take different arguments, and so the <code>date</code> function in arc2 only works with operating systems where the <code>date</code> command takes the <code>-u</code> and <code>-r</code> arguments.")
 
     (p () "This patch implements Arc&rsquo;s <code>date</code> using MzScheme&rsquo;s <code>date.ss</code> library, and so works in any operating system that MzScheme runs in in.")
-))))
+))
+
+ (obj
+
+  name "atomic-fix"
+  type 'patch
+  git-repo "arc-atomic-fix"
+
+  short "Fixes arc2&rsquo;s atomic macro to work in the presence of exceptions."
+
+  long
+
+  `((p () "arc2 has a bug where calls to <code>atomic</code> will stop being atomic after an exception is thrown inside of a call to <code>atomic</code>.  For example, after:")
+
+    ,(code "(errsafe (atomic (/ 1 0)))")
+
+    (p () "further calls to <code>atomic</code> will no longer be atomic.  This patch fixes the bug.")))
+
+
+))
 
 (def homepage (hack)
   (or hack!homepage
