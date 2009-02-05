@@ -75,8 +75,21 @@ arc> (mz:port? 4)
 
     (p () "further calls to <code>atomic</code> will no longer be atomic.  This patch fixes the bug.")))
 
+ (obj
 
-))
+  name "exit-on-eof"
+  type 'patch
+  git-repo "arc-exit-on-eof"
+
+  short "Patches Arc so that an eof (^D in Unix) at the command prompt will exit Arc."
+
+  long
+  (code "
+$ mzscheme -m -f as.scm
+Use (quit) to quit, (tl) to return here after an interrupt.
+arc> ^D
+$
+"))))
 
 (def homepage (hack)
   (or hack!homepage
