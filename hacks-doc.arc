@@ -85,6 +85,9 @@ arc> (mz:port? 4)
 (def patch-url (hack)
   (string "http://catdancer.github.com/" hack!name ".patch"))
 
+(def diff-url (hack)
+  (string "http://catdancer.github.com/" hack!name ".patch.txt"))
+
 (def git-repo-http (hack)
   (string "http://github.com/CatDancer/" hack!git-repo))
 
@@ -110,7 +113,7 @@ arc> (mz:port? 4)
     ,hack!long
     (h2 () "Get This Hack") 
     (ul ()
-      (li () (a (href ,(patch-url hack) target _blank) "diff against arc2"))
+      (li () (a (href ,(diff-url hack) target _blank) "diff against arc2"))
       (li () (a (href ,(string (git-repo-http hack) "/tree/master")) "repository on GitHub"))
       (li () (a (href ,(string (git-repo-http hack) "/tarball/master")) "download a tarball of arc2 with this patch applied"))
       )
@@ -129,8 +132,11 @@ arc> (mz:port? 4)
     ,(code "git pull " (git-repo-git hack) ".git master")))
 
 (def make-patch (name)
-  (system (string "cd ~/git/" name " && "
-                  "git-diff arc2 HEAD >~/git/catdancer.github.com/" name ".patch")))
+  (let fn (string "~/git/catdancer.github.com/" name)
+    (system:string
+      "cd ~/git/" name " && "
+      "git-diff arc2 HEAD >" fn ".patch && "
+      "cp " fn ".patch " fn ".patch.txt")))
 
 (def make-patches ()
   (map [make-patch _!name] (keep [is _!type 'patch] hacks*)))
