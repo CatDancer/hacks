@@ -1,4 +1,4 @@
-(def code content
+(edef code content
   `(blockquote () (pre () ,(esc (apply string content)))))
 
 (= darc (qu "<code>.arc</code>"))
@@ -136,7 +136,7 @@ $
 
     (p () "In other languagues, sharing code is complicated: you have to package it up, and then publish your package, and users have to download and install it, and then load it their program...")
 
-    (p () "Following Paul Graham&rsquo;s " ,(qu "<a href=\"http://paulgraham.com/power.html\">Succinctness is Power</a>") " hypothesis, I&rsquo;ve tried to imagine what could be the quickest possible way to share and use Arc code.")
+    (p () "Following Paul Graham&rsquo;s " ,(qu "<a href=\"http://paulgraham.com/power.html\">Succinctness is Power</a>") " hypothesis, I tried to imagine what could be the quickest possible way to share and use Arc code.")
 
     (h2 () "Prerequisites")
 
@@ -191,9 +191,231 @@ $
  10
  arc>")
 
-    (p () "Why " ,(qu "<code>erp</code>") "? Well, A) it&rsquo;s short for " ,(qu "stderr print") ", and B) it&rsquo;s what I&rsquo;m usually thinking in the middle of a debug session... :-)")
+    (p () "Why " ,(qu "<code>erp</code>") "? Well, A) it&rsquo;s short for " ,(qu "stderr print") ", and B) it&rsquo;s what I&rsquo;m usually thinking in the middle of a debug session... :-)")))
 
-))))
+ 
+ (obj
+  name "extend"
+  type 'lib
+
+  short "Extend Arc functions"
+
+  long
+
+  `((p () (code () "(extend <i>name</i> <i>label</i> <i>test</i> <i>replacement</i>)"))
+
+    (p () "Extends the function <i>name</i>.  Replaces <i>name</i> with a new definition so that when <i>name</i> is called later, <i>test</i> is first called with the same arguments.  If <i>test</i> returns true, the <i>replacement</i> function is called instead of the original definition of <i>name</i>.  If <i>test</i> returns false, the original definition of <i>name</i> is called as if the function hadn't been extended.")
+
+    (p () "For example,")
+
+    ,(code "
+ (extend + table
+   (fn (x . _) (is (type x) 'table))
+   (fn ts (listtab (apply + (map tablist ts)))))
+
+ arc> (+ (obj a 1) (obj b 2))
+ #hash((a . 1) (b . 2))
+")
+
+    (p () "You can extend a function several times and the extensions will be chained together.  Each extension in turn (starting with the last defined) will be asked if it wants to handle this call, and if its test function returns false, the next extension is tried, and then finally the original function is called if none of the extensions step in.")
+
+    (p () "The label is used during development to distinguish between extensions.  If you call <code>extend</code> again with the same label on the same function name, it replaces the extension on the function instead of adding it to the function&rsquo;s chain.  As you develop an extension this avoids having your earlier, buggy implementations left on the extension chain.")
+
+    (h2 () "Rationale")
+
+    (p () "Many languages and libraries offer ways to modify or extend their behavior such as option lists, registering callbacks, or specializing on types.  These mechanisms often look convenient, but in practice I&rsquo;ve found that, at least for me, the designers often haven&rsquo;t anticipated the kind of modification that I need to make.  I'm left with either awkwardly trying to shoehorn the API to do want I need, or hack the source.  Hacking the source is made ironically difficult, because along with doing whatever useful thing that I want the language or library to do for me, the code is obfuscated with a layer of option parsing / callback mechanisms / class hierarchies etc.")
+
+    (p () "As a specific example, I&rsquo;ve used a number of web servers in developing web applications.  None of them do everything I need, but I&rsquo;ve found Arc the easiest to get to do what I need, because the source is so easy to hack, so I just go in and make it do whatever it is.")
+
+    (p () "The caveat comes when I want to share my hack with others.  I can share a patch file, but patch files aren&rsquo;t easily composable.  If two patch files modify the same area of code you&rsquo;ll get a patch conflict that has to be resolved manually.")
+
+    (p () "<code>extend</code> is one possible answer when a hack can be implemented by changing the behavior of a function.  Like patching the source, you do not need to do anything to the original code to make it extendable.  Unlike patches, function extensions are composable.")
+
+    (p () "Of course only some Arc hacks can be represented as changing a function (<code>extend</code> does nothing to help with hacking macros, as just one example), so <code>extend</code> is not a general purpose extension mechanism.")
+
+    (p () "An interesting gray area is cases where Arc could be usefully extended by <code>extend</code> if particular functionality was available as a function.  I&rsquo;ll share two examples, the first if the function <code>respond</code> in Arc&rsquo;s web server were factored into two functions, and the second if Arc&rsquo;s compiler were made available as an Arc function.")
+
+    (h2 () "Examples")
+
+    (h3 () "Extending Arc&rsquo;s web server")
+
+    (p () "Suppose we wanted to treat an op that was a number specially, so that instead of " ,(qu "http://mysite.com/item?id=1234") " we could use " ,(qu "http://mysite.com/1234") ".")
+
+    ,(code "
+ (def digit (c)
+   (<= #\\0 c #\\9))
+
+ (def isid (op)
+   (all digit (string op)))
+")
+
+    (p () "The point in srv.arc where it figures out which function to call given the URL is in the function <code>respond</code>:")
+
+    ,(code "
+ (def respond (str op args cooks ip)
+   (w/stdout str
+     (aif (srvops* op)
+           (let req (inst 'request 'args args 'cooks cooks 'ip ip)
+             (if (redirector* op)
+                 (do (prn rdheader*)
+                     (prn \"Location: \" (it str req))
+                     (prn))
+                 (do (prn header*)
+                 ...
+")
+
+    (p () "So let&rsquo;s make our own function to handle the response in the case where the URL is a number:")
+
+    ,(code "
+ (def respond-id (str op args cooks ip)
+   (w/stdout str
+     (prn header*)
+     (prn \"this is the page for the item with id \" op)))
+")
+
+    (p () "And a function to decide if we&rsquo;re going to handle this response:")
+
+    ,(code "
+ (def id-test (str op args cooks ip)
+   (isid op))
+")
+
+    (p () "Extending <code>respond</code>:")
+
+    ,(code "
+ (extend respond id id-test respond-id)
+")
+
+    (p () "And that&rsquo;s all we need to implement our extension:")
+
+    ,(code "
+ $ curl http://localhost:8080/1234
+ this is the page for the item with id 1234
+")
+    
+    (p () "Notice however how our implementation of <code>respond-id</code> needs to set up <code>stdout</code>, which is done for us if we&rsquo;re using a <code>defop</code>, and we&rsquo; not getting a <code>req</code> object, which is passed into a <code>defop</code> for us.  This is because Arc&rsquo;s implementation of <code>respond</code> is doing two things: setting up to handle the request and creating the <code>req</code> object, and figuring out which function to call to handle the request.  If Arc&rsquo;s implementation were factored into two functions, something like this:")
+
+    ,(code "
+ (def respond (str op args cooks ip)
+   (w/stdout str
+     (let req (inst 'request 'args args 'cooks cooks 'ip ip 'op op 'str str)
+       (choose-response req))))
+
+ (def choose-response (req)
+   (aif (srvops* req!op)
+         (if (redirector* req!op)
+         ...
+")
+
+    (p () "then our extension becomes even simpler:")
+
+    ,(code "
+ (def id-test (req)
+   (isid req!op))
+
+ (def respond-id (req)
+   (prn header*)
+   (prn)
+   (prn \"this is the page for the item with id \" req!op))
+
+ (extend choose-response id id-test respond-id)
+")
+
+    (h3 () "Extending the Arc compiler")
+
+    (p () "Arc&rsquo;s MzScheme implementation of <code>ac</code> in <code>ac.scm</code> looks like:")
+
+    ,(code "
+ (define (ac s env)
+   (cond ((string? s) (string-copy s))
+         ((literal? s) s)
+         ((eqv? s 'nil) (list 'quote 'nil))
+         ...
+")
+
+    (p () "if we rename this to <code>ac-impl</code>:")
+
+    ,(code "
+ (define (ac-impl s env)
+   (cond ((string? s) (string-copy s))
+         ((literal? s) s)
+         ...
+")
+
+    (p () "and make an Arc function <code>arc-ac</code> which is implemented by this:")
+
+    ,(code "
+ (xdef 'arc-ac ac-impl)
+")
+
+    (p () "and have the MzScheme <code>ac</code> procedure call Arc&rsquo;s <code>arc-ac</code>:")
+
+    ,(code "
+ (define (ac s env)
+   ((namespace-variable-value '_arc-ac) s env))
+")
+
+    (p () "The Arc compiler is now available in Arc.  Normally when an Arc variable refers to an MzScheme procedure, changing the variable doesn't effect anything in MzScheme, but since we're arranged for MzScheme to call Arc&rsquo;s <code>arc-ac</code> function, we can change the behavior of Arc&rsquo;s compiler.  We do need to keep in mind that despite being an Arc function, <code>arc-ac</code> is passed MzScheme values and needs to return an MzScheme value.")
+
+    (p () "To prove that we can really change Arc&rsquo;s compiler, let&rsquo;s try replacing it with an obstinate one:")
+
+    ,(code "
+arc> (def arc-ac (s env) (mz ''nope))
+#<procedure: arc-ac>
+arc> 1
+nope
+arc> (+ 3 (/ 10 4))
+nope
+arc> (quit)
+nope
+arc> ^C
+")
+
+    (p () ("It worked!  (I&rsquo;m using my <a href=\"mz.html\">mz</a> patch to let me easily return an MzScheme value)."))
+
+    (p () ("Here&rsquo;s an extension to Arc&rsquo;s compiler so that reading an end-of-file character (^D in Unix) exits Arc:"))
+
+    ,(code "
+ (extend arc-ac eof
+   (fn (s env) (mz (eof-object? s)))
+   (fn (s env) (quit)))
+
+ arc> ^D
+ $
+")
+
+    ))
+
+ (obj
+  name "json"
+  type 'lib
+
+  short "alpha release of a JSON parser / generator"
+
+  long
+
+  `((p () "<a href=\"http://json.org/\">JSON</a> is a lightweight data-interchange format.  It is a subset of JavaScript, and so is especially popular for web applications.")
+
+    ,(code "
+ arc> (prn:tojson `(1 \"a\" ,(obj x 'null y 'true)))
+ [1,\"a\",{\"y\":true,\"x\":null}]
+
+ arc> (fromjson \"[true,false,null,[],42]\")
+ (t nil nil nil \"42\")
+")
+    )
+
+    bugs
+    '("fromjson returns numbers as an unparsed string."
+      "Whitespace is not parsed."
+      "fromjson does not distinguish between <code>false</code>, <code>null</code>, and the empty array, if that&rsquo;s something you need for your application."
+      "tojson does not recognize non-integer numbers."
+      "Lots of duplicate and ugly code in the implementation."
+      )
+
+    )
+
+ ))
 
 (def gen-bugs (hack)
   (aif hack!bugs
@@ -256,7 +478,7 @@ $
             `((li ()
                 "With <a href=\"lib.html\">lib</a> installed:"
                 (br ())
-                ,(code "(lib \"http://catdancer.github.com/erp.arc\")"))))
+                ,(code "(lib \"http://catdancer.github.com/" hack!name ".arc\")"))))
       (li ()
         ,(string hack!name ".arc")
         " (" (a (href ,(string (lib-url hack) ".txt")) "view") ")"
@@ -281,6 +503,10 @@ $
         "To apply this patch using git, start with a git repository containing arc2 or the version of Arc that you want to patch.  Then in the git working directory, type:")
       ,(code "git pull " (git-repo-git hack) ".git master"))))
 
+(def license (hack)
+  `((h2 () "License")
+    (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain"))))
+
 (def gen (hack)
   `((a (href "/") "Arc hacks") ":"
     (h1 () ,(esc hack!name))
@@ -288,7 +514,8 @@ $
     ,hack!long
     ,(gen-bugs hack)
     ,(aif (get-hack hack) `((h2 () "Get This Hack") ,it))
-    ,(apply-hack hack)))
+    ,(apply-hack hack)
+    ,(license hack)))
 
 (def make-patch (name)
   (let fn (string "~/git/catdancer.github.com/" name)
@@ -365,7 +592,7 @@ td {
 (def write-doc-pages ()
   (map write-doc-page (rem [is _!type 'mirror] hacks*)))
 
-(def all ()
+(def al ()
   (write-index-page)
   (write-doc-pages)
   (make-patches)
