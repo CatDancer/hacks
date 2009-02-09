@@ -18,6 +18,7 @@
   name "mz"
   type 'patch
   git-repo "arc-mz-patch"
+  comment "http://arclanguage.org/item?id=8719"
 
   short "Allows easy access to the underlying MzScheme language that Arc is written in."
 
@@ -98,6 +99,7 @@ $
   name "lib"
   type 'lib
   git-repo "arc-lib"
+  comment "http://arclanguage.org/item?id=8889"
 
   short "A succinct method for sharing Arc libraries."
 
@@ -156,6 +158,7 @@ $
 
   name "erp"
   type 'lib
+  comment "http://arclanguage.org/item?id=8726"
 
   short "My favorite debug print macro."
 
@@ -197,6 +200,7 @@ $
  (obj
   name "extend"
   type 'lib
+  comment "http://arclanguage.org/item?id=8895"
 
   short "Extend Arc functions"
 
@@ -389,6 +393,7 @@ arc> ^C
  (obj
   name "json"
   type 'lib
+  comment "http://arclanguage.org/item?id=8896"
 
   short "alpha release of a JSON parser / generator"
 
@@ -503,6 +508,11 @@ arc> ^C
         "To apply this patch using git, start with a git repository containing arc2 or the version of Arc that you want to patch.  Then in the git working directory, type:")
       ,(code "git pull " (git-repo-git hack) ".git master"))))
 
+(def comment-on-hack (hack)
+  (aif hack!comment
+    `((h2 () "Comment")
+      (a (href ,it) "Comment") " on this hack in the Arc Forum.")))
+
 (def license (hack)
   `((h2 () "License")
     (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain"))))
@@ -515,6 +525,7 @@ arc> ^C
     ,(gen-bugs hack)
     ,(aif (get-hack hack) `((h2 () "Get This Hack") ,it))
     ,(apply-hack hack)
+    ,(comment-on-hack hack)
     ,(license hack)))
 
 (def make-patch (name)
