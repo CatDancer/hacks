@@ -3,6 +3,9 @@
 
 (= darc (qu "<code>.arc</code>"))
 
+(def indent xs
+  `(div (style "margin-left: 2em") ,@xs))
+
 (= hacks* (list
 
  (obj
@@ -128,7 +131,7 @@ $
 
     (p (style "margin-top: 1.5em;") "<code>(lib-new)</code>")
 
-    (p (style "margin-left: 2em;") "Prints out a list of URL's that have a new version available or have been overridden.  (That is, it prints out those URL's for which the file in the <code>lib</code> directory is different than the file at the URL).")
+    ,(indent "Prints out a list of URL's that have a new version available or have been overridden.  (That is, it prints out those URL's for which the file in the <code>lib</code> directory is different than the file at the URL).")
 
     (p (style "margin-top: 1.5em;") (code () "(lib-fetch " (i () "url") ")"))
 
@@ -153,6 +156,32 @@ $
   bugs
   '("Windows is not supported."
     "Relies on having <code>wget</code> installed."))
+
+ (obj
+   name "byte"
+   type 'lib
+   git-repo "hacks"
+
+   ;short "A small bit of 8-bit byte support in Arc"
+
+   ;long
+   #;`((p ()
+       "In MzScheme, strings contain Unicode characters and "
+       (a (href "http://download.plt-scheme.org/doc/352/html/mzscheme/mzscheme-Z-H-3.html#node_sec_3.6")
+         "byte strings")
+       " are used for arbitrary 8-bit byte data.  This hack adds a little bit of support for byte strings in Arc (what I&rsquo;m currently using in my own code).")
+     (p () (code () "(instring s)"))
+
+     ,(indent
+        `("Arc&rsquo;s " (code () "instring") " function (which takes a string and returns an input port reading from that string) is extended to accept a byte string argument, and so Arc&rsquo;s " (code () "w/instring") " and " (code () "fromstring") " will as well."))
+     
+      (p () (code () "(bytestring a b c ...)"))
+
+      ,(indent
+         `((p () "The arguments are converted to byte strings, and the resulting byte strings are concatenated together, and the resulting byte string is returned.")
+           (p () "Arguments that are already byte strings are simply concatenated unchanged.  Other values are first converted to an Arc string with <code>string</code>, and then the Unicode characters in the Arc string are converted to a byte string using the Unicode UTF-8 encoding.")))
+
+      ))
 
  (obj
 
@@ -454,7 +483,7 @@ arc> ^C
 (def git-repo-git (hack)
   (string "git://github.com/CatDancer/" (git-repo hack)))
 
-(def gen-index ()
+(edef gen-index ()
   `((h1 () "Arc Hacks")
 
     (table (style "margin-left: 2em;")
@@ -464,7 +493,7 @@ arc> ^C
                     (td () (a (href ,(homepage hack)) ,hack!name))
                     (td () ,(string hack!type))
                     (td () ,hack!short)))
-               hacks*)))))
+               (keep (fn (hack) hack!short) hacks*))))))
 
 (def github-repo (hack)
   `(a (href ,(string (git-repo-http hack) "/tree")) "repository on GitHub"))
@@ -538,14 +567,14 @@ arc> ^C
 (def make-patches ()
   (map [make-patch _!name] (keep [is _!type 'patch] hacks*)))
 
-(def copy-lib (name)
+(def copy-lib (hack)
   (system:string
-   "cp ~/git/" name "/* ~/git/catdancer.github.com/")
+   "cp ~/git/" (git-repo hack) "/" hack!name ".arc ~/git/catdancer.github.com/")
   (system:string
-   "cd ~/git/catdancer.github.com; cp " name ".arc " name ".arc.txt"))
+   "cd ~/git/catdancer.github.com; cp " hack!name ".arc " hack!name ".arc.txt"))
 
 (def copy-libs ()
-  (map [copy-lib _!name] (keep [is _!type 'lib] hacks*)))
+  (map copy-lib (keep [is _!type 'lib] hacks*)))
 
 (= css "
 
@@ -590,18 +619,18 @@ td {
 (def write-index-page ()
   (w/outfile f "~/git/catdancer.github.com/index.html"
     (disp doctype* f)
-    (disp (html:index-page) f)
+    (disp (nlhtml:index-page) f)
     (disp "\n" f))
   nil)
 
 (def write-doc-page (hack)
   (w/outfile f (string "~/git/catdancer.github.com/" hack!name ".html")
     (disp doctype* f)
-    (disp (html:doc-page hack) f)
+    (disp (nlhtml:doc-page hack) f)
     (disp "\n" f)))
 
 (def write-doc-pages ()
-  (map write-doc-page (rem [is _!type 'mirror] hacks*)))
+  (map write-doc-page (rem [or (is _!type 'mirror) (no _!short)] hacks*)))
 
 (def al ()
   (write-index-page)
