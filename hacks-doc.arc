@@ -9,18 +9,42 @@
 (= hacks* (list
 
  (obj
+   name "emacs-utf8"
+   type 'howto
+   short "How to convince Emacs to save .arc files in UTF-8"
+   
+   long
+   `((p () "MzScheme supports Unicode and defaults to reading and writing files in the Unicode UTF-8 encoding, so you can conveniently use Unicode characters in both strings and symbols.")
 
-  name "arc"
-  type 'mirror
-  homepage "http://github.com/arcmirror/arc/tree/master"
+     (p ()
+       "UTF-8 is a superset of ASCII, so an ASCII file can be read in as a UTF-8 document without any special translation.  If a Unicode document contains only ASCII characters, then when it is written out as a UTF-8 file it will be a plain ASCII file.")
 
-  short "An unmodified mirror of Paul Graham&rsquo;s Arc releases.")
+     (p ()
+       "However, if you use Emacs as your editor, there was some ancient file archive format that had an "
+       ,(qu "arc") " extension, so by default Emacs will save <code>.arc</code> files without any translation from Emacs&rsquo; internal representation of Unicode characters.  This means that while you can easily type or copy Unicode characters into your Emacs buffer, when you save your file the characters will turn into garbage.")
+
+     (p () "Add this to your <code>.emacs</code> file to have <code>.arc</code> files saved in UTF-8:")
+
+     ,(indent
+        `((pre ()
+            "(setq auto-coding-alist\n"
+            "  (cons '(\"\\\\.arc\\\\'\" . utf-8) auto-coding-alist))\n")))
+      ))
+
+; (obj
+;
+;  name "arc"
+;  type 'mirror
+;  homepage "http://github.com/arcmirror/arc/tree/master"
+;
+;  short "An unmodified mirror of Paul Graham&rsquo;s Arc releases.")
 
  (obj
 
   name "mz"
   type 'patch
-  git-repo "arc-mz-patch"
+  git-repo "arc"
+  tag "arc2.mz0"
   comment "http://arclanguage.org/item?id=8719"
 
   short "Allows easy access to the underlying MzScheme language that Arc is written in."
@@ -54,7 +78,8 @@ arc> (mz:port? 4)
 
   name "date"
   type 'patch
-  git-repo "arc-date-patch"
+  git-repo "arc"
+  tag "arc2.date0"
 
   short "Cross-platform implementation of Arc&rsquo;s date function."
 
@@ -69,8 +94,8 @@ arc> (mz:port? 4)
 
   name "atomic-fix"
   type 'patch
-  git-repo "arc-atomic-fix"
-
+  git-repo "arc"
+  tag "arc2.atomic-fix0"
   short "Fixes arc2&rsquo;s atomic macro to work in the presence of exceptions."
 
   long
@@ -85,8 +110,8 @@ arc> (mz:port? 4)
 
   name "exit-on-eof"
   type 'patch
-  git-repo "arc-exit-on-eof"
-
+  git-repo "arc"
+  tag "arc2.exit-on-eof0"
   short "Patches Arc so that an eof (^D in Unix) at the command prompt will exit Arc."
 
   long
@@ -183,8 +208,9 @@ $
 
       ))
 
- (obj
+ (obj name "perl" type 'lib git-repo "hacks")
 
+ (obj
   name "erp"
   type 'lib
   comment "http://arclanguage.org/item?id=8726"
@@ -424,7 +450,7 @@ arc> ^C
   type 'lib
   comment "http://arclanguage.org/item?id=8896"
 
-  short "alpha release of a JSON parser / generator"
+  short "JSON reader / writer"
 
   long
 
@@ -439,6 +465,12 @@ arc> ^C
 ")
     )
 
+    versions
+    `(ul ()
+       (li () "v2: removed an unnecessary dependency on the mz patch")
+       (li () "v1: fixed encoding of control characters")
+       (li () "v0: initial version"))
+         
     bugs
     '("fromjson returns numbers as an unparsed string."
       "Whitespace is not parsed."
@@ -466,10 +498,10 @@ arc> ^C
       (string hack!name ".html")))
 
 (def patch-url (hack)
-  (string "http://catdancer.github.com/" hack!name ".patch"))
+  (string "http://catdancer.github.com/" hack!tag ".patch"))
 
 (def diff-url (hack)
-  (string "http://catdancer.github.com/" hack!name ".patch.txt"))
+  (string "http://catdancer.github.com/" hack!tag ".patch.txt"))
 
 (def lib-url (hack)
   (string "http://catdancer.github.com/" hack!name ".arc"))
@@ -484,7 +516,7 @@ arc> ^C
   (string "git://github.com/CatDancer/" (git-repo hack)))
 
 (edef gen-index ()
-  `((h1 () "Arc Hacks")
+  `((h1 () "Cat’s hacks")
 
     (table (style "margin-left: 2em;")
       (tbody ()
@@ -496,15 +528,17 @@ arc> ^C
                (keep (fn (hack) hack!short) hacks*))))))
 
 (def github-repo (hack)
-  `(a (href ,(string (git-repo-http hack) "/tree")) "repository on GitHub"))
+  `(a (href ,(string (git-repo-http hack) "/tree" (aif hack!tag (string "/" it))))
+     "repository on GitHub"))
 
 (def get-hack (hack)
  (case hack!type
    patch
    `(ul ()
-      (li () (a (href ,(diff-url hack) target _blank) "diff against arc2"))
+      (li ()
+        (a (href ,(diff-url hack) target _blank) "diff against arc2"))
       (li () ,(github-repo hack))
-      (li () (a (href ,(string (git-repo-http hack) "/tarball/master")) "download a tarball of arc2 with this patch applied")))
+      (li () (a (href ,(string (git-repo-http hack) "/tarball/" (aif hack!tag it 'master))) "download a tarball of arc2 with this patch applied")))
 
    lib
    `(ul ()
@@ -523,19 +557,33 @@ arc> ^C
 (def apply-hack (hack)
   (case hack!type
     patch
-    `((h2 () "Applying This Hack to Your Arc")
+    `((h2 () "Apply This Hack to Your Arc")
       (p () "By using patch or git, you can incorporate this patch into your version of Arc.")
       (h3 () "With patch")
       (p ()
         "To apply this patch to your copy of arc using the patch command, download "
-        (a (href ,(esc (patch-url hack))) ,hack!name ".patch")
+        (a (href ,(esc (patch-url hack))) ,hack!tag ".patch")
         " into your Arc directory"
-        ", and type:")
-      ,(code "patch <" hack!name ".patch")
+        ", and at the Unix command line inside the Arc directory, type:")
+      ,(code " patch <" hack!tag ".patch")
+      (p ()
+        ,(qu "<code>patch</code>") " is a standard utility that comes with Unix.  (If you&rsquo;re running Windows, iirc <code>patch</code> comes with cygwin).")
+      (p () "For example,")
+      ,(code
+        " $ wget http://ycombinator.com/arc/arc2.tar
+ [... downloading ...]
+ $ tar xf arc2.tar
+ $ cd arc2
+ $ patch <" hack!tag ".patch
+ patching [...]
+ $")
       (h3 () "With git")
       (p ()
-        "To apply this patch using git, start with a git repository containing arc2 or the version of Arc that you want to patch.  Then in the git working directory, type:")
-      ,(code "git pull " (git-repo-git hack) ".git master"))))
+        "In a git repository that has the same arc2 ancestor commit as mine, git-merge can be used:")
+      ,(code "$ git merge " hack!tag)
+      (p ()
+         "In a repository where arc2 has been checked in as a different commit, running git-merge will produce merge conflicts as it tries to apply both of the arc2 commits.  You can download and apply the patch instead:")
+      ,(code "$ git-apply arc2.mz0.patch"))))
 
 (def comment-on-hack (hack)
   (aif hack!comment
@@ -543,29 +591,36 @@ arc> ^C
       (a (href ,it) "Comment") " on this hack in the Arc Forum.")))
 
 (def license (hack)
-  `((h2 () "License")
-    (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain"))))
+  (if (isnt hack!type 'howto)
+       `((h2 () "License")
+         (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")))))
 
 (def gen (hack)
-  `((a (href "/") "Arc hacks") ":"
-    (h1 () ,(esc hack!name))
-    (p () (i () ,hack!short))
+  `((a (href "/") "Cat’s hacks") ":"
+    ,(if (is hack!type 'howto)
+          `(h2 () ,(esc hack!short))
+          `((h1 () ,(esc hack!name))
+            (p () (i () ,hack!short))))
     ,hack!long
     ,(gen-bugs hack)
     ,(aif (get-hack hack) `((h2 () "Get This Hack") ,it))
     ,(apply-hack hack)
     ,(comment-on-hack hack)
-    ,(license hack)))
+    ,(license hack)
+    ,(aif hack!versions
+       `((h2 () "Versions")
+         ,it))))
 
-(def make-patch (name)
-  (let fn (string "~/git/catdancer.github.com/" name)
+(def make-patch (tag)
+  (if tag
+  (let fn (string "~/git/catdancer.github.com/" tag)
     (system:string
-      "cd ~/git/" name " && "
-      "git-diff arc2 HEAD >" fn ".patch && "
-      "cp " fn ".patch " fn ".patch.txt")))
+      "cd ~/git/arc && "
+      "git-diff arc2 " tag " >" fn ".patch && "
+      "cp " fn ".patch " fn ".patch.txt"))))
 
 (def make-patches ()
-  (map [make-patch _!name] (keep [is _!type 'patch] hacks*)))
+  (map [make-patch _!tag] (keep [is _!type 'patch] hacks*)))
 
 (def copy-lib (hack)
   (system:string
@@ -604,14 +659,15 @@ td {
 
 (def mypage (title content)
   `(html ()
-      (head ()
-         (title () ,(esc title))
-         ,(inline-css css))
-       (body ()
-         ,content)))
+     (head ()
+       (meta (http-equiv "Content-Type" content "text/html; charset=UTF-8"))
+       (title () ,(esc title))
+       ,(inline-css css))
+     (body ()
+       ,content)))
 
 (def index-page ()
-  (mypage "Arc Hacks" (gen-index)))
+  (mypage "Cat’s hacks" (gen-index)))
 
 (def doc-page (hack)
   (mypage hack!name (gen hack)))

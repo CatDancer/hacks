@@ -1,0 +1,6 @@
+(load "~/git/code/edef.arc")
+(load "~/git/hacks/html2.arc")
+(load "~/git/code/html-util.arc")
+(load "~/git/hacks/hacks-doc.arc")
+(al)
+(quit)
