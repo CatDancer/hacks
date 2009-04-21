@@ -525,7 +525,9 @@ arc> ^C
                     (td () (a (href ,(homepage hack)) ,hack!name))
                     (td () ,(string hack!type))
                     (td () ,hack!short)))
-               (keep (fn (hack) hack!short) hacks*))))))
+               (keep (fn (hack) hack!short) hacks*))))
+    (br ())
+    "cat@catdancer.ws"))
 
 (def github-repo (hack)
   `(a (href ,(string (git-repo-http hack) "/tree" (aif hack!tag (string "/" it))))
