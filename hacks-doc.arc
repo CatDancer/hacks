@@ -40,12 +40,39 @@
 ;  short "An unmodified mirror of Paul Graham&rsquo;s Arc releases.")
 
  (obj
+  name "table-reader-writer"
+  type 'patch
+  git-repo "arc"
+  tag "arc2.table-reader-writer0"
+  comment "http://arclanguage.org/item?id=9131"
 
+  contains '("scheme-values" "list-writer")
+
+  short "Reader / writer for Arc tables"
+
+  long
+
+  `((p ()
+      "This patch to Arc adds a reader and writer for Arc tables so that they are printed out in a way that they can be read back in.")
+
+    (p ()
+      "Although this patch implements a particular syntax for table literals (a simple unstructed list of keys and values within curly braces), my main goal was implementing the reader / writer part; the patch can easily be hacked to some other syntax if you prefer another.")
+
+    ,(code " arc> (obj \"Boston\" 'bos \"San Francisco\" 'sfo \"Paris\" 'cdg)
+ {\"San Francisco\" sfo \"Paris\" cdg \"Boston\" bos}
+ arc> {\"San Francisco\" sfo \"Paris\" cdg \"Boston\" bos}
+ {\"San Francisco\" sfo \"Paris\" cdg \"Boston\" bos}")
+
+    (p ()
+      "Unlike tables read using MzScheme’s <code>#hash((...))</code> syntax, tables read in by this reader can be modified.")))
+
+ (obj
   name "mz"
   type 'patch
   git-repo "arc"
   tag "arc2.mz0"
   comment "http://arclanguage.org/item?id=8719"
+  view t
 
   short "Allows easy access to the underlying MzScheme language that Arc is written in."
 
@@ -481,6 +508,31 @@ arc> ^C
 
     )
 
+ (obj
+  name "scheme-values"
+  type 'patch
+  git-repo "arc"
+  tag "arc2.scheme-values0"
+  view t
+
+  short "Allows Scheme values to pass through the Arc compiler.")
+
+ (obj
+  name "list-writer"
+  type 'patch
+  git-repo "arc"
+  tag "arc2.list-writer0"
+
+  short "A writer for Arc lists."
+
+  long
+  (fn ()
+    `((p ()
+        "<code>arc2</code> writes Arc lists by converting them to Scheme lists and printing them using the Scheme writer.  By implementing a writer for Arc values we can build upon this patch to customize the output of Arc values.  The " ,(homepage-ref "table-reader-writer") " patch does this for Arc tables.")
+
+      (p ()
+        "By itself this patch is supposed to produce the same output as <code>arc2</code> does.  (If it doesn’t, that would be a bug)."))))
+
  ))
 
 (def gen-bugs (hack)
@@ -496,6 +548,10 @@ arc> ^C
 (def homepage (hack)
   (or hack!homepage
       (string hack!name ".html")))
+
+(def homepage-ref (h)
+  (let hack hack.h
+    `(a (href ,(homepage hack)) ,hack!name)))
 
 (def patch-url (hack)
   (string "http://catdancer.github.com/" hack!tag ".patch"))
@@ -522,7 +578,7 @@ arc> ^C
       (tbody ()
         ,@(map (fn (hack)
                  `(tr ()
-                    (td () (a (href ,(homepage hack)) ,hack!name))
+                    (td () ,(homepage-ref hack))
                     (td () ,(string hack!type))
                     (td () ,hack!short)))
                (keep (fn (hack) hack!short) hacks*))))
@@ -555,6 +611,23 @@ arc> ^C
         " (" (a (href ,(lib-url hack)) "download") ")")
       (li () ,(github-repo hack)))))
       
+(def hack (name)
+  (if (isa name 'table)
+       name
+       (or (find [is _!name name] hacks*) (err "no hack found with name" name))))
+
+(def gen-contains (h)
+  (aif h!contains
+        `((h2 () "Contains")
+          (p ()
+            "This patch is built upon the following patches:")
+          (ul ()
+            ,@(map (fn (name)
+                     `(li ()
+                        ,(homepage-ref name)
+                        " "
+                        (i () ,(esc (hack.name 'short)))))
+                   it)))))
 
 (def apply-hack (hack)
   (case hack!type
@@ -596,6 +669,9 @@ arc> ^C
   (if (isnt hack!type 'howto)
        `((h2 () "License")
          (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")))))
+(def readfilec (name)
+  (apply string
+    (w/infile i name (drain (readc i)))))
 
 (def gen (hack)
   `((a (href "/") "Cat’s hacks") ":"
@@ -603,8 +679,12 @@ arc> ^C
           `(h2 () ,(esc hack!short))
           `((h1 () ,(esc hack!name))
             (p () (i () ,hack!short))))
-    ,hack!long
+    ,(if hack!view
+       `(pre ()
+          ,(esc (readfilec (string "~/git/catdancer.github.com/" hack!tag ".patch")))))
+    ,(if (isa hack!long 'fn) (hack!long) hack!long)
     ,(gen-bugs hack)
+    ,(gen-contains hack)
     ,(aif (get-hack hack) `((h2 () "Get This Hack") ,it))
     ,(apply-hack hack)
     ,(comment-on-hack hack)
