@@ -9,6 +9,105 @@
 (= hacks* (list
 
  (obj
+  name "sharing-hacks"
+  type 'howto
+  short "Sharing Arc hacks"
+
+  long
+  `((p () "If I like a hack to Arc, or want to use it for a particular project, I’d like to be able to apply just that patch to Arc, without having to get a lot of other hacks as well.")
+
+    (p () "This is a rather unusual notion, since most software is distributed in releases, with each release incorporating a bunch of patches.  To work on the release, programmers will check in patches to a development branch.  When everything is working, the branch will be tagged (“version 1.52”) and released.")
+
+    (p () "Unless special care is taken to produce a clean patch series, this process mushes hacks together.  I’ll be working on hack A, and check in a patch A0, and then other hacks B, C, D, E, and F will get checked in, and then I’ll check some more patches A1 and A2 which finish up hack A.  Now it’s tedious to pull out just hack A without getting the rest.")
+
+    (p () "I’ve been playing around with git, wondering if git was a good choice for sharing Arc hacks, and if so, which git entity (repositories, branches, tags...) would be best to use for one hack.  It turns out that tags work well.")
+
+    (p () "Suppose, for example, that you happened to want arc2 with my date and atomic fixes, my patch to read and write Arc tables, and nothing else that wasn’t needed for those hacks.  Here’s how to do it with git (git’s output not shown):")
+
+    ,(code "
+ $ git clone git://github.com/CatDancer/arc.git
+ $ cd arc
+ $ git checkout arc2
+ $ git merge arc2.date0
+ $ git merge arc2.atomic-fix0
+ $ git merge arc2.table-reader-writer0
+")
+
+    (p () "Your working directory will now contain a version of arc2 with those patches applied.")
+
+    (p () "My naming convention for these tags is that the first part (“arc2”) is what is being patched, the second part is the name of the hack, and the final number is the version of the hack.  Each hack contains the minimal number of changes needed to patch arc2 to implement just that hack, and nothing more.")
+
+    (p () "Some hacks do depend on other hacks, so the git commands above will have pulled in some other hacks as well.  The <code>--decorate</code> option to <code>git-log</code> will print out tags that point to included commits:")
+
+    ,(code "
+ $ git-log --decorate
+ ...
+ commit bef6020695b2a4e7721e09d6833bbc2c1f512eae (refs/tags/arc2.table-reader-writer0)
+ Author: Cat Dancer <cat@catdancer.ws>
+ Date:   Sun Apr 12 15:00:35 2009 -0400
+ ...
+ commit 1f2243319651f5797ecb3f4e0166bfd5751af3b1 (refs/tags/arc2.scheme-values0)
+ ...
+")
+
+    (p () "To get just the tag names, the <code>%d</code> format string prints the “decorate” value:")
+
+    ,(code "
+ $ git log --pretty=format:%d
+
+
+ (refs/tags/arc2.table-reader-writer0)
+
+ (refs/tags/arc2.scheme-values0)
+ (refs/tags/arc2.list-writer0)
+ (refs/tags/arc2.date0)
+ (refs/tags/arc2.atomic-fix0)
+ (refs/tags/arc2, refs/remotes/origin/master, refs/remotes/origin/HEAD, refs/heads/master)
+
+ ")
+
+    (p () "(The blank lines are the merge commits that don’t have any tags pointing to them).  This output in turn can be made easier to read by pulling out just the tags:")
+
+    ,(code "
+ $ git log --pretty=format:%d | perl -ne 'm.refs/tags/([^),]+). && print \"$1\\n\"'
+ arc2.table-reader-writer0
+ arc2.scheme-values0
+ arc2.list-writer0
+ arc2.date0
+ arc2.atomic-fix0
+ arc2
+")
+
+    (p () "Now we can easily see that the “scheme-values” and “list-writer” hacks were dependencies and got pulled in as well.")
+
+    (p () "Why tags instead of branches?  I could have a “table-reader-writer” branch which contained the latest version of that hack, and I might do that for some of my larger hacks where I’m actually going through multiple revisions.  However, we need tags anyway to keep track of which version of a patch we have (since version 1 of hack A might be based on version 4 of hack B, while version 2 of hack A is based on version 6 of hack B).  Since branches evolve over time, git has extra machinery to keep track of branches and to allow local branches to track remote branches, etc., a complexity which isn’t needed if all you want is to grab version 0 of the arc2 date patch.")
+
+    (p ()
+       "At the moment I have around twenty hacks to Arc checked in to my "
+       (a (href "http://github.com/CatDancer/arc/tree/master") "git repository on github")
+       ", each one independently accessible as a separate tag.")
+
+    (p () "Many of these hacks are tiny, for example, arc2.testify-iso0 lets you pass in a list as the test argument to the functions that use testify:")
+
+    ,(code "
+ arc> (rem '(c 3) '((a 1) (b 2) (c 3) (d 4)))
+ ((a 1) (b 2) (d 4))
+")
+
+    (p () "the patch adds one letter to the Arc source code, changing a call to <code>is</code> to a call to <code>iso</code>:")
+
+    ,(code "
+  (def testify (x)
+ -  (if (isa x 'fn) x [is _ x]))
+ +  (if (isa x 'fn) x [iso _ x]))
+ ")
+
+    (p ()
+      "You can see a pretty colored version of the commit on "
+      (a (href "http://github.com/CatDancer/arc/commit/a1753d2fc5dc9cb841b3172e2b42f9a15be6bc65") "github")
+      ".")))
+ 
+ (obj
    name "emacs-utf8"
    type 'howto
    short "How to convince Emacs to save .arc files in UTF-8"
@@ -752,7 +851,7 @@ td {
   (mypage "Cat’s hacks" (gen-index)))
 
 (def doc-page (hack)
-  (mypage hack!name (gen hack)))
+  (mypage (or hack!short hack!name) (gen hack)))
 
 (def write-index-page ()
   (w/outfile f "~/git/catdancer.github.com/index.html"
