@@ -14,11 +14,25 @@
   short "Sharing Arc hacks"
 
   long
-  `((p () "If I like a hack to Arc, or want to use it for a particular project, I’d like to be able to apply just that patch to Arc, without having to get a lot of other hacks as well.")
+  `((p () "Arc is a highly hackable language, so we can expect that programmers will create many Arc hacks.  Some will be good, some bad, some experimental, some very interesting.  Some hacks may be highly useful for a particular project but a bad idea for Arc in general.")
+
+    (p () "As an Arc programmer, I’d like to be able to easily use hacks that other hackers create.  And, to be able to get that hack without getting a lot of other hacks that I don’t want or don’t need.  If I like a hack to Arc, or want to use it for a particular project, I’d like to be able to apply just that patch to Arc, without having to get a lot of other hacks as well.")
+
+    (p () "As someone who would like to use other people’s hacks, for me the ideal situation would be if every hack were available as a minimal set of differences from Arc.")
 
     (p () "This is a rather unusual notion, since most software is distributed in releases, with each release incorporating a bunch of patches.  To work on the release, programmers will check in patches to a development branch.  When everything is working, the branch will be tagged (“version 1.52”) and released.")
 
     (p () "Unless special care is taken to produce a clean patch series, this process mushes hacks together.  I’ll be working on hack A, and check in a patch A0, and then other hacks B, C, D, E, and F will get checked in, and then I’ll check some more patches A1 and A2 which finish up hack A.  Now it’s tedious to pull out just hack A without getting the rest.")
+
+    (p () "There is one common example where programmers do work at creating a “clean” patch set: when they are submitting work to a project’s coordinator, and want to make it easy for the coordinator to understand and accept the patches.")
+
+    (p () "But this common scenario has a middleman: the coordinator who is collecting patches from developers and creating releases.  I, the programmer using the code, gets the patches from the developers through the coordinator.  The coordinator is deeply knowledgeable about the hairy internal details of the software and makes sure that the submitted patches don’t unintentionally break things.")
+
+    (p () "What if we don’t need a middleman?  Arc today is remarkably free of “hairy internal details”.  One of the results of refining code down to its most succinct representation is that you aren’t left with a lot of complicated structure that you need to be a guru to figure out.")
+
+    (p () "What if it were as easy and comfortable to choose which patches you wanted in your Arc as it is in other languages to choose which libraries you wanted to use?")
+
+    (p () "I suspect there may be some unexpected benefits.  As one example, when code just does what is needs to do like <code>(do (a) (b) (c))</code> it’s easy to see what it’s doing.  But then some people need different things and so we start getting configuration options like <code>(do (if config*!a (a)) (if config*!b (b)) ...)</code>.  I’ve seen libraries where there is more code dealing with configuration options specifying what to do then there is code to do the actual thing that the library is supposed to do.  What if the code was so clear and patches so easy that it would be as easy to specify a patch to set the code to <code>(do (a) (c))</code> as it would be to write a configuration file?")
 
     (p () "I’ve been playing around with git, wondering if git was a good choice for sharing Arc hacks, and if so, which git entity (repositories, branches, tags...) would be best to use for one hack.  It turns out that tags work well.")
 
