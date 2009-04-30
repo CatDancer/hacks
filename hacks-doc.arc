@@ -12,9 +12,12 @@
   name "sharing-hacks"
   type 'howto
   short "Sharing Arc hacks"
+  comment "http://arclanguage.org/item?id=9137"
 
   long
-  `((p () "Arc is a highly hackable language, so we can expect that programmers will create many Arc hacks.  Some will be good, some bad, some experimental, some very interesting.  Some hacks may be highly useful for a particular project but a bad idea for Arc in general.")
+  `((h3 () "Hacking and patches")
+
+    (p () "Arc is a highly hackable language, so we can expect that programmers will create many Arc hacks.  Some will be good, some bad, some experimental, some very interesting.  Some hacks may be highly useful for a particular project but a bad idea for Arc in general.")
 
     (p () "As an Arc programmer, I’d like to be able to easily use hacks that other hackers create.  And, to be able to get that hack without getting a lot of other hacks that I don’t want or don’t need.  If I like a hack to Arc, or want to use it for a particular project, I’d like to be able to apply just that patch to Arc, without having to get a lot of other hacks as well.")
 
@@ -34,7 +37,9 @@
 
     (p () "I suspect there may be some unexpected benefits.  As one example, when code just does what is needs to do like <code>(do (a) (b) (c))</code> it’s easy to see what it’s doing.  But then some people need different things and so we start getting configuration options like <code>(do (if config*!a (a)) (if config*!b (b)) ...)</code>.  I’ve seen libraries where there is more code dealing with configuration options specifying what to do then there is code to do the actual thing that the library is supposed to do.  What if the code was so clear and patches so easy that it would be as easy to specify a patch to set the code to <code>(do (a) (c))</code> as it would be to write a configuration file?")
 
-    (p () "I’ve been playing around with git, wondering if git was a good choice for sharing Arc hacks, and if so, which git entity (repositories, branches, tags...) would be best to use for one hack.  It turns out that tags work well.")
+    (h3 () "Using git")
+
+    (p () "I’ve been playing around with git, wondering if git was a good choice for sharing Arc hacks, and if so, which git entity (repositories, branches, tags...) would be best to use for one hack.  From what I can tell so far, it looks like tags work well.")
 
     (p () "Suppose, for example, that you happened to want arc2 with my date and atomic fixes, my patch to read and write Arc tables, and nothing else that wasn’t needed for those hacks.  Here’s how to do it with git (git’s output not shown):")
 
@@ -101,14 +106,14 @@
        (a (href "http://github.com/CatDancer/arc/tree/master") "git repository on github")
        ", each one independently accessible as a separate tag.")
 
-    (p () "Many of these hacks are tiny, for example, arc2.testify-iso0 lets you pass in a list as the test argument to the functions that use testify:")
+    (p () "Many of these hacks are tiny.  For example, arc2.testify-iso0 lets you pass in a list as the test argument to the functions that use testify:")
 
     ,(code "
  arc> (rem '(c 3) '((a 1) (b 2) (c 3) (d 4)))
  ((a 1) (b 2) (d 4))
 ")
 
-    (p () "the patch adds one letter to the Arc source code, changing a call to <code>is</code> to a call to <code>iso</code>:")
+    (p () "the patch adds one letter to the Arc source code, changing a call to <code>is</code> to <code>iso</code>:")
 
     ,(code "
   (def testify (x)
@@ -119,7 +124,8 @@
     (p ()
       "You can see a pretty colored version of the commit on "
       (a (href "http://github.com/CatDancer/arc/commit/a1753d2fc5dc9cb841b3172e2b42f9a15be6bc65") "github")
-      ".")))
+      ".")
+    ))
  
  (obj
    name "emacs-utf8"
@@ -776,7 +782,7 @@ arc> ^C
 (def comment-on-hack (hack)
   (aif hack!comment
     `((h2 () "Comment")
-      (a (href ,it) "Comment") " on this hack in the Arc Forum.")))
+      (a (href ,it) "Comment") " in the Arc Forum.")))
 
 (def license (hack)
   (if (isnt hack!type 'howto)
