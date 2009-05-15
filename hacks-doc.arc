@@ -41,7 +41,7 @@
 
     (p () "I’ve been playing around with git, wondering if git was a good choice for sharing Arc hacks, and if so, which git entity (repositories, branches, tags...) would be best to use for one hack.  From what I can tell so far, it looks like tags work well.")
 
-    (p () "Suppose, for example, that you happened to want arc2 with my date and atomic fixes, my patch to read and write Arc tables, and nothing else that wasn’t needed for those hacks.  Here’s how to do it with git (git’s output not shown):")
+    (p () "Suppose, for example, that you happened to want arc2 with my date and atomic fixes, my patch to read and write Arc tables, and nothing else that wasn’t needed for those hacks.  Here’s how to do it with git (git’s output is not shown.  Also, this assumes that you’re using my commit of arc2; see the next section if you’re starting with a different commit of arc2):")
 
     ,(code "
  $ git clone git://github.com/CatDancer/arc.git
@@ -125,6 +125,57 @@
       "You can see a pretty colored version of the commit on "
       (a (href "http://github.com/CatDancer/arc/commit/a1753d2fc5dc9cb841b3172e2b42f9a15be6bc65") "github")
       ".")
+
+    (h3 () "Dealing with different ancestor commits")
+
+    (p () "The example above of merging patches went very smoothly, but it did assume that you were starting with my commit of arc2.  Suppose instead you started with your own:")
+
+    ,(code "
+ $ wget http://ycombinator.com/arc/arc2.tar
+ $ tar xf arc2.tar
+ $ cd arc2
+ $ git init
+ $ git add .
+ $ git commit -m 'initial version'
+")
+
+    (p () "Now you can fetch a patch of mine:")
+
+    ,(code "
+ $ git fetch git://github.com/CatDancer/arc.git tag arc2.date0
+")
+
+    (p () "But now if you try to merge the patch you’ll get conflicts:")
+
+    ,(code "
+ $ git merge arc2.date0
+ Auto-merging ac.scm
+ CONFLICT (add/add): Merge conflict in ac.scm
+ Auto-merging arc.arc
+ CONFLICT (add/add): Merge conflict in arc.arc
+ Automatic merge failed; fix conflicts and then commit the result.
+")
+
+    (p () "The problem is that git knows that arc2.date0 is a patch to my commit of arc2, but it doesn’t know that your checkin of arc2 can be treated the same as my commit.")
+
+    (p () "There’s an easy fix.  First let’s get rid of the failed merge and revert back to your checkin of arc2 that you had before:")
+
+    ,(code "
+ $ git reset --hard
+")
+
+    (p () "By “merging” my arc2 into your checkin of arc2, git will know that they don’t conflict.")
+
+    ,(code "
+ $ git merge arc2
+")
+
+    (p () "None of the files actually change in this merge commit, since after all your checkin of arc2 and my commit of arc2 are the same.  But now the merge of my patch goes smoothly:")
+
+    ,(code "
+ $ git merge arc2.date0
+")
+
     ))
  
  (obj
@@ -652,6 +703,42 @@ arc> ^C
       (p ()
         "By itself this patch is supposed to produce the same output as <code>arc2</code> does.  (If it doesn’t, that would be a bug)."))))
 
+ (obj
+  name "load-rename"
+  title "load-w/rename"
+  type 'patch
+  git-repo "arc"
+  tag "arc2.load-rename0"
+
+  short "Load an Arc source code file with renames"
+
+  long
+  `((p () "thaddeus wanted to use my JSON library, but it defined a function called “alt” which conflicted with another library he was using that had a function with the same name.")
+
+    (p () "Conventionally, libraries are supposed to carefully hide away their internals to avoid just this kind of conflict.  There’s a couple of problems with this approach though:")
+    
+    (ul ()
+      (li () "The library author doesn’t <i>know</i> how the library is going to be used, so the effort made to avoid conflicts is speculative: time may be spent hiding a function which as it turns out never would have caused a conflict in the future, or if the function <i>hadn’t</i> been hidden away it might have turned out to be useful to other code in ways that the library author hadn’t thought of.")
+      (li () "Even after going to the extra work and attendent code complication of hiding library internals, the library may <i>still</i> be making names visible which conflict with some future use of the library."))
+
+    (p ()
+      "Thus the problem with the conventional approach is that the library author is being asked to take responsibility for avoiding conflicts at the time the library is written, when it is impossible to know what actually needs to be done to avoid conflicts because the actual conflicts can’t be known until the library is used with other software.")
+
+    (p ()
+      "Whether or not the library author has attempted to avoid conflicts by hiding library internals, if a conflict does occur then it falls upon the programmer using the library to resolve the conflict.")
+
+    (p ()
+      "One approach to resolve the conflict is to simply rename the offending function or macro in the library, giving it a name that doesn't conflict with the other code being used.")
+
+    (p ()
+      "Naturally if there’s some renaming that needs to be done, we’d prefer to let the computer do it for us rather than tediously having to go through the library source code doing the renaming by hand.")
+
+    ,(code "
+ (load-w/rename \"json.arc\" '((alt json-alt)))
+")
+
+    ))
+
  ))
 
 (def gen-bugs (hack)
@@ -670,7 +757,7 @@ arc> ^C
 
 (def homepage-ref (h)
   (let hack hack.h
-    `(a (href ,(homepage hack)) ,hack!name)))
+    `(a (href ,(homepage hack)) ,(or hack!title hack!name))))
 
 (def patch-url (hack)
   (string "http://catdancer.github.com/" hack!tag ".patch"))
@@ -776,8 +863,9 @@ arc> ^C
         "In a git repository that has the same arc2 ancestor commit as mine, git-merge can be used:")
       ,(code "$ git merge " hack!tag)
       (p ()
-         "In a repository where arc2 has been checked in as a different commit, running git-merge will produce merge conflicts as it tries to apply both of the arc2 commits.  You can download and apply the patch instead:")
-      ,(code "$ git-apply arc2.mz0.patch"))))
+         "In a repository where arc2 has been checked in as a different commit, running git-merge will produce merge conflicts as it tries to apply both of the arc2 commits.  See the instructions at the end of "
+         (a (href "sharing-hacks.html") "Sharing Hacks")
+         " for how to resolve the conflict."))))
 
 (def comment-on-hack (hack)
   (aif hack!comment
@@ -785,9 +873,19 @@ arc> ^C
       (a (href ,it) "Comment") " in the Arc Forum.")))
 
 (def license (hack)
-  (if (isnt hack!type 'howto)
+  (if (is hack!type 'patch)
+       `((h2 () "License")
+          (p () "The original Arc source is copyrighted by Paul Graham and Robert Morris and licensed under the Perl Foundations's Artistic License 2.0 as described in the “copyright” file in the Arc distribution.")
+
+          (p () "My <i>changes</i> to Arc (this patch that I wrote) are in the "
+             (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")
+             ".")
+
+          (p () "The <i>combination</i> of the original Arc and my changes together (what you get after you apply my patch) is also licensed under the Perl Foundations's Artistic License 2.0."))
+      (isnt hack!type 'howto)
        `((h2 () "License")
          (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")))))
+
 (def readfilec (name)
   (apply string
     (w/infile i name (drain (readc i)))))
@@ -796,7 +894,7 @@ arc> ^C
   `((a (href "/") "Cat’s hacks") ":"
     ,(if (is hack!type 'howto)
           `(h2 () ,(esc hack!short))
-          `((h1 () ,(esc hack!name))
+          `((h1 () ,(esc (or hack!title hack!name)))
             (p () (i () ,hack!short))))
     ,(if hack!view
        `(pre ()
@@ -839,7 +937,7 @@ body {
   margin-left: 2em;
 }
 
-p, ol {
+p, ol, ul {
   width: 40em;
 }
 
