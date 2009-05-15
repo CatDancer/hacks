@@ -709,6 +709,7 @@ arc> ^C
   type 'patch
   git-repo "arc"
   tag "arc2.load-rename0"
+  comment "http://arclanguage.org/item?id=9202"
 
   short "Load an Arc source code file with renames"
 
@@ -744,8 +745,9 @@ arc> ^C
    type 'patch
    git-repo "arc"
    tag "arc2.testify-table0"
+   comment "http://arclanguage.org/item?id=9214"
 
-   short "Treat tables like functions in Arc’s list sequence functions"
+   short "Treat tables like functions in Arc's list sequence functions"
 
    show-patch "
  (def testify (x)
