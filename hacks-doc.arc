@@ -739,6 +739,65 @@ arc> ^C
 
     ))
 
+  (obj
+   name "testify-table"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.testify-table0"
+
+   short "Treat tables like functions in Arc’s list sequence functions"
+
+   show-patch "
+ (def testify (x)
+-  (if (isa x 'fn) x [is _ x]))
++  (if (in (type x) 'fn 'table) x [is _ x]))
+"
+
+   long
+   `((p ()
+       "Arc comes with a number of functions that apply a function to successive elements of a sequence.  From the "
+       (a (href "http://ycombinator.com/arc/tut.txt") "Arc tutorial")
+       ":")
+     ,(code "
+  arc> (keep odd '(1 2 3 4 5 6 7))
+  (1 3 5 7)
+  arc> (rem odd '(1 2 3 4 5 6))
+  (2 4 6)
+  arc> (all odd '(1 3 5 7))
+  t
+  arc> (some even '(1 3 5 7))
+  nil
+  arc> (pos even '(1 2 3 4 5))
+  1
+")
+     (p () "If the first argument isn’t a function, it is treated like a function that tests for equality with that (again, from the Arc tutorial):")
+
+     ,(code "
+  arc> (rem 'a '(a b a c u s))
+  (b c u s)
+")
+
+     (p () "Since a table isn’t a function, if you pass it as the first argument, it gets treated as a value to test for equality with.")
+
+     (p () "This patch changes Arc so that tables are instead treated like functions are:")
+
+     ,(code "
+  arc> (rem (obj a t c t) '(a b a c u s))
+  (b u s)
+")
+
+     (p () "In arc2 this evaluates to <code>'(a b a c u s)</code>, since none of the elements of the list is the table.  Of course, this means you can no longer check for a table in a list of tables without resorting to writing your own function to check for equality:")
+
+     ,(code "
+  arc> (with (t1 (obj a 1) t2 (obj a 2) t3 (obj a 3))
+         (rem t2 (list t1 t2 t3)))
+  (#hash((a . 1)) #hash((a . 3)))                 <--- arc2
+  (#hash((a . 1)) #hash((a . 2)) #hash((a . 3)))  <--- with this patch
+")
+
+     (p () "I use this patch in my code since I often want to do the former and have yet to need to do the latter, so this patch makes my code more concise.")
+     ))
+
  ))
 
 (def gen-bugs (hack)
@@ -895,6 +954,8 @@ arc> ^C
     ,(if (is hack!type 'howto)
           `(h2 () ,(esc hack!short))
           `((h1 () ,(esc (or hack!title hack!name)))
+            ,(aif hack!show-patch
+                    (code it))
             (p () (i () ,hack!short))))
     ,(if hack!view
        `(pre ()
