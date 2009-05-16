@@ -808,7 +808,7 @@ arc> ^C
    nolicense t
    comment "http://arclanguage.org/item?id=9227"
 
-   short "Allow lists to be used as the first argument to the testify functions."
+   short "Allow lists to be used as the first argument to Arc's list sequence functions."
 
    show-patch "
  (def testify (x)
