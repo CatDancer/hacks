@@ -800,7 +800,51 @@ arc> ^C
      (p () "I use this patch in my code since I often want to do the former and have yet to need to do the latter, so this patch makes my code more concise.")
      ))
 
- ))
+  (obj
+   name "testify-iso"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.testify-iso0"
+   nolicense t
+
+   short "Allow lists to be used as the first argument to the testify functions."
+
+   show-patch "
+ (def testify (x)
+-  (if (isa x 'fn) x [is _ x]))
++  (if (isa x 'fn) x [iso _ x]))
+"
+
+   long
+   `((table (class code)
+       (tr ()
+          (th ())
+          (th ())
+          (th () "arc2")
+          (th ())
+          (th () "patch"))
+       (tr ()
+          (td ()
+            "(rem '(c d) '((a b) (c d) (e f)))")
+          (td (class arrow)
+            "&rArr;")
+          (td ()
+             "((a b) (c d) (e f))")
+          (td (class spacer) "&nbsp;")
+          (td ()
+             "((a b) (e f))"))
+       (tr ()
+          (td ()
+            "(pos '(4 5) '(1 2 3 (4 5) 6))")
+          (td (class arrow))
+          (td ()
+             "nil")
+          (td (class spacer))
+          (td ()
+             "3")))
+     (br ())
+     (br ())))
+))
 
 (def gen-bugs (hack)
   (aif hack!bugs
@@ -934,7 +978,9 @@ arc> ^C
       (a (href ,it) "Comment") " in the Arc Forum.")))
 
 (def license (hack)
-  (if (is hack!type 'patch)
+  (if hack!nolicense
+       nil
+      (is hack!type 'patch)
        `((h2 () "License")
           (p () "The original Arc source is copyrighted by Paul Graham and Robert Morris and licensed under the Perl Foundations's Artistic License 2.0 as described in the “copyright” file in the Arc distribution.")
 
@@ -1015,6 +1061,27 @@ pre, code {
 td {
   vertical-align: top;
   padding: 0 1em 0.5em 0;
+}
+
+table.code {
+  border-collapse: collapse;
+}
+
+table.code td {
+  padding: 5px 1em;
+  font-family: courier, monospace;
+  border: 1px solid #ddd;
+}
+
+table.code td.arrow {
+  border: none;
+  padding: 0 1em;
+  font-family: verdana;
+}
+
+table.code td.spacer {
+  border: none;
+  padding: 0;
 }
 
 ")
