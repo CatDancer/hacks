@@ -701,7 +701,11 @@ arc> ^C
         "<code>arc2</code> writes Arc lists by converting them to Scheme lists and printing them using the Scheme writer.  By implementing a writer for Arc values we can build upon this patch to customize the output of Arc values.  The " ,(homepage-ref "table-reader-writer") " patch does this for Arc tables.")
 
       (p ()
-        "By itself this patch is supposed to produce the same output as <code>arc2</code> does.  (If it doesn’t, that would be a bug)."))))
+        "By itself this patch is supposed to produce the same output as <code>arc2</code> does.  (If it doesn’t, that would be a bug).")))
+
+  bugs
+  '("Attempting to write a list containing a cycle will enter an infinite loop and crash MzScheme by consuming all available memory.")
+  )
 
  (obj
   name "load-rename"
@@ -756,7 +760,11 @@ arc> ^C
 "
 
    long
-   `((p ()
+   `((h3 () "Why not to use this patch")
+     (p () "When structs or objects are implemented as tables, code such as “take these objects out of my list of objects” will stop working with this patch.  See "
+        (a (href "http://news.ycombinator.com/item?id=616071") "Duplicates appearing in HN top?") " for an example.")
+     (h3 () "Description")
+     (p ()
        "Arc comes with a number of functions that apply a function to successive elements of a sequence.  From the "
        (a (href "http://ycombinator.com/arc/tut.txt") "Arc tutorial")
        ":")
@@ -845,6 +853,47 @@ arc> ^C
              "3")))
      (br ())
      (br ())))
+
+  (obj
+   name "obj-no-atomic"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.obj-no-atomic0"
+
+   short "Avoid unnecessary use of atomic by obj"
+
+   show-patch "
+  (mac obj args
+    (w/uniq g
+      `(let ,g (table)
+ -       ,@(map (fn ((k v)) `(= (,g ',k) ,v))
+ +       ,@(map (fn ((k v)) `(sref ,g ,v ',k))
+                (pair args))
+         ,g)))
+"
+
+   long
+   `((p () "I use <code>obj</code> a lot in my code, using tables as objects/structs, and as I was condensing my code I began to get forms like:")
+
+     ,(code "
+ (obj a (if foo (throw nil) ...)
+
+ (obj a (readfile \"foo\"))
+")
+
+     (p () "<code>obj</code> expands into a call to = to store the individual values in the new table, and arc2 protects expansions of = with atomic.  The first form above generates an error since the throw can’t cross the continuation boundary created by atomic, and the second is dangerous since any delay inside of a call to atomic will cause all other uses of atomic to hang until it is done.")
+
+     (p () "However, in the case of <code>obj</code> there’s no need to protect the setting of the table values since the newly created table will not be visible to other threads at least until <code>obj</code> returns.  Thus the creation of the table can be done outside of the protection of atomic.")
+
+     (p () "With this patch the first form now works:")
+
+     ,(code "
+arc> (catch (obj a (throw nil)))
+nil
+")
+
+     (p () "And the second has no danger of hanging other threads.")
+     ))
 ))
 
 (def gen-bugs (hack)
