@@ -873,7 +873,13 @@ arc> ^C
 "
 
    long
-   `((p () "I use <code>obj</code> a lot in my code, using tables as objects/structs, and as I was condensing my code I began to get forms like:")
+   `((p (style "padding: 1em; border: 1px solid green")
+       (b () "Update:")
+       " see "
+       (a (href "http://arclanguage.org/item?id=9288") "http://arclanguage.org/item?id=9288")
+       " for an approach which fixes the bug of <code>obj</code> evaluating its value arguments too late, instead of working around the bug by avoiding <code>=</code>.")
+
+     (p () "I use <code>obj</code> a lot in my code, using tables as objects/structs, and as I was condensing my code I began to get forms like:")
 
      ,(code "
  (obj a (if foo (throw nil) ...)
