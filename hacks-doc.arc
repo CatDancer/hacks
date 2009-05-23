@@ -900,6 +900,88 @@ nil
 
      (p () "And the second has no danger of hanging other threads.")
      ))
+
+  (obj
+   name "nil-impl-by-null"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.nil-impl-by-null0"
+   comment "http://arclanguage.org/item?id=9300"
+
+   contains '("list-writer")
+
+   short "Speculative patch implementing Arc's nil with MzScheme's null"
+
+   long
+   `((p ()
+        "This rough patch to arc2 tries out implementing Arc’s <code>nil</code> internally with MzScheme’s <code>null</code> <code>'()</code>, instead of using MzScheme's <code>nil</code> symbol.")
+
+     (p ()
+        "From inside of Arc nothing has changed: lists are still terminated by <code>nil</code>, <code>nil</code> is still a symbol, <code>nil</code> still reads and prints as <code>nil</code>, and so on.  Only the internal representation of <code>nil</code> has changed.")
+
+     (p ()
+        "This simplifies the Arc compiler since it doesn’t have to convert back and forth between <code>nil</code> and <code>'()</code> all the time.")
+     )
+
+   bugs
+   '("I took a weed-wacker to ac.scm and blindly removed all the ac-denil’s and ac-niltree’s.  I did no analysis of the code I was changing, so I expect I probably messed some things up. The extent of my testing was to run the patched Arc on one of my web pages and see that it didn’t crash.  But hey, it ran 7% faster."
+     "I see one mistake already: I took out the check for setting nil when I should have changed it to check for setting '()."
+
+     "This patch depends on the list-writer patch to print <code>nil</code> as <code>nil</code>, and so shares that patch’s bug that writing lists containing cycles will go into an infinite loop, consume all your memory, and crash MzScheme.")
+   )
+
+  (obj
+   name "srv-mime"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.srv-mime0"
+
+   short "Simplify and fix mime types in srv.arc"
+
+   long
+   `((p () "This patch to arc2 removes some code duplication in srv.arc (resulting in a codetree decrease of 17), and fixes the Content-Type MIME types produced for static files with the .css and .txt extensions.")))
+
+  (obj
+   name "port-line-counting"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.port-line-counting0"
+
+   short "Show the line number in some error messages"
+
+   show-patch "
+ +(port-count-lines-enabled #t)
+"
+   long
+   `((p () "This patch turns on MzScheme’s port line counting feature.  This means that some Arc errors will now display the line number of the error.")
+
+     "buggy.arc:"
+     ,(code "
+ 1: (def a (x)
+ 2:   (+ 3 x))
+ 3:
+ 4: (def b (y)
+ 5:   (* y 4)  ;; <--- missing close parenthesis
+ 6:
+ 7: (def c (z)
+ 8:   (/ (b z) 4))
+")
+
+     (p () "Before:")
+
+     ,(code "
+ arc> (load \"buggy.arc\")
+ Error: \"buggy.arc::23: read: expected a ')'\"
+")
+
+     (p () "After:")
+
+     ,(code "
+  arc> (load \"buggy.arc\")
+  Error: \"buggy.arc:4:0: read: expected a ')'\"
+")
+     ))
+
 ))
 
 (def gen-bugs (hack)
