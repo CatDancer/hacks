@@ -201,14 +201,6 @@
             "  (cons '(\"\\\\.arc\\\\'\" . utf-8) auto-coding-alist))\n")))
       ))
 
-; (obj
-;
-;  name "arc"
-;  type 'mirror
-;  homepage "http://github.com/arcmirror/arc/tree/master"
-;
-;  short "An unmodified mirror of Paul Graham&rsquo;s Arc releases.")
-
  (obj
   name "table-reader-writer"
   type 'patch
@@ -935,6 +927,7 @@ nil
    type 'patch
    git-repo "arc"
    tag "arc2.srv-mime0"
+   comment "http://arclanguage.org/item?id=9311"
 
    short "Simplify and fix mime types in srv.arc"
 
@@ -946,6 +939,7 @@ nil
    type 'patch
    git-repo "arc"
    tag "arc2.port-line-counting0"
+   comment "http://arclanguage.org/item?id=9312"
 
    short "Show the line number in some error messages"
 
