@@ -954,8 +954,8 @@ nil
  1: (def a (x)
  2:   (+ 3 x))
  3:
- 4: (def b (y)
- 5:   (* y 4)  ;; <--- missing close parenthesis
+ 4: (def b (y) <-- parenthesis at beginning of line not closed
+ 5:   (* y 4)
  6:
  7: (def c (z)
  8:   (/ (b z) 4))
