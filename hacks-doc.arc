@@ -947,7 +947,11 @@ nil
  +(port-count-lines-enabled #t)
 "
    long
-   `((p () "This patch turns on MzScheme’s port line counting feature.  This means that some Arc errors will now display the line number of the error.")
+   `((h3 () "Why not to use this patch")
+     (p ()
+        "When I try to run my application with this patch applied to Arc in MzScheme version 352, MzScheme crashes with “Process scheme segmentation fault”.  I don’t know if this problem may have been fixed in some later version of MzScheme.")
+     (h3 () "Description")
+     (p () "This patch turns on MzScheme’s port line counting feature.  This means that some Arc errors will now display the line number of the error.")
 
      "buggy.arc:"
      ,(code "
