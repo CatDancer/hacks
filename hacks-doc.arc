@@ -1076,11 +1076,26 @@ nil
                         (i () ,(esc (hack.name 'short)))))
                    it)))))
 
+(def pull-command (hack)
+  (string
+   "$ git pull git://github.com/CatDancer/arc.git tag "
+   hack!tag))
+
 (def apply-hack (hack)
   (case hack!type
     patch
     `((h2 () "Apply This Hack to Your Arc")
-      (p () "By using patch or git, you can incorporate this patch into your version of Arc.")
+      (p () "By using git or patch, you can incorporate this patch into your version of Arc.")
+
+      (h3 () "With git")
+      ,(code " " (pull-command hack))
+      (p () "For example,")
+      ,(code
+        " $ mkdir arc
+ $ cd arc
+ $ git init
+ " (pull-command hack))
+
       (h3 () "With patch")
       (p ()
         "To apply this patch to your copy of arc using the patch command, download "
@@ -1098,15 +1113,7 @@ nil
  $ cd arc2
  $ patch <" hack!tag ".patch
  patching [...]
- $")
-      (h3 () "With git")
-      (p ()
-        "In a git repository that has the same arc2 ancestor commit as mine, git-merge can be used:")
-      ,(code "$ git merge " hack!tag)
-      (p ()
-         "In a repository where arc2 has been checked in as a different commit, running git-merge will produce merge conflicts as it tries to apply both of the arc2 commits.  See the instructions at the end of "
-         (a (href "sharing-hacks.html") "Sharing Hacks")
-         " for how to resolve the conflict."))))
+ $"))))
 
 (def comment-on-hack (hack)
   (aif hack!comment
