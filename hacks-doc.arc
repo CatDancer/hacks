@@ -980,6 +980,35 @@ nil
 ")
      ))
 
+  (obj
+   name "toerr"
+   type 'patch
+   git-repo "arc"
+   tag "arc2.toerr0"
+
+   short "Send output going to stdout to stderr instead"
+
+   show-patch "
+ +(mac toerr body
+ +  `(w/stdout (stderr) ,@body))
+
+  (def ero args
+ -  (w/stdout (stderr)
+ +  (toerr
+      (each a args
+  ...
+"
+
+   long
+   `((p () "This is a little macro that I find useful.  It takes output that normally would go to stdout and sends it to stderr instead.  (I call it <code>toerr</code> by analogy with <code>tostring</code>, which takes output going to stdout and puts it in a string).")
+
+     (p () "When used inside of a defop, it causes output to print on the Arc REPL instead of being sent to the user’s browser.")
+
+     ,(code "
+ (defop foo req
+   (toerr:ppr ...)
+")))
+
 ))
 
 (def gen-bugs (hack)
