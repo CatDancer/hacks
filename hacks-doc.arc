@@ -1009,6 +1009,59 @@ nil
    (toerr:ppr ...)
 ")))
 
+ (obj
+  name "arc-libaries"
+  type 'howto
+  short "Arc Libraries"
+
+  long
+  `((p () "This howto proposes an approach for writing Arc libraries, and examines the usefulness of git for supporting this approach.")
+
+    (h3 () "The evolution of libraries")
+
+    (p ()
+       "In the beginning there was Arc:")
+
+    ,(code "
+ arc
+")
+
+    (p ()
+       "Then programs written in Arc:")
+
+    ,(code "
+      program-a
+      program-b
+ arc  program-c
+      program-d
+      program-e
+")
+
+    (p ()
+       "And some of the code in the programs could be usefully extracted into libaries, making the total amount of code needed less:")
+
+    ,(code "
+                 program-a
+      library-a  program-b
+ arc  library-b  program-c
+      library-c  program-d
+                 program-e
+")
+    (p () "For these particular set of five programs, there is some way of writing the libraries A-C and the programs A-E so that the total amount of code in the libraries and programs is at a minimum.")
+
+    (p () "If the libraries and programs are written in this way, then when we add another program F we will likely find that F needs some features that the libraries don’t yet provide (since they only implement the minimum needed for the programs A-E), and so some libraries may need to be updated:")
+
+    ,(code "
+                  program-a
+      library-a'  program-b
+ arc  library-b   program-c
+      library-c'  program-d
+                  program-e
+                  program-f
+")
+
+    ))
+
 ))
 
 (def gen-bugs (hack)
