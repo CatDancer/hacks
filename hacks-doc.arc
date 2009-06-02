@@ -1232,6 +1232,48 @@ nil
 
 ;;     ))
 
+  (obj
+   name "arc3-hacks-preview"
+   type 'howto
+   comment "http://arclanguage.org/item?id=9496"
+
+   short "A preview of some arc3 hacks"
+
+   long
+   `((table (class foo)
+       (tr ()
+         (th () "Hack")
+         (th () "Tag"))
+       ,@(map (fn ((name title tag))
+                `(tr ()
+                   (td (valign bottom)
+                     ,@(if name
+                            `((a (href ,(string name ".html")) ,name)
+                              (br ())))
+                     ,title)
+                   (td (valign bottom)
+                     (code () ,tag))))
+              '(("exit-on-eof" "Exit Arc on ^D" "catdancer.arc3rc3.exit-on-eof0")
+                ("table-reader-writer" "Reader / writer for Arc tables" "catdancer.arc3rc3.table-reader-writer0")
+                ("testify-iso" "Allow lists to be used as the first argument to Arc's list sequence functions" "catdancer.arc3rc3.testify-iso0")
+                ("testify-table" "Treat tables like functions in Arc's list sequence functions" "catdancer.arc3rc3.testify-table0")
+                (nil "Merge of testify-iso and testify-table" "catdancer.arc3rc3.testify-table0.testify-iso0")
+                ("toerr" "Send output going to stdout to stderr instead" "catdancer.arc3rc3.toerr0")
+                )))
+     (p (style "margin-top: 2em") "Each hack may be applied to your copy of Arc independently.  For example, if you happened to want the table-reader-writer and the toerr hacks, you could type:")
+
+     ,(code "
+ $ mkdir arc
+ $ cd arc
+ $ git init
+ $ git pull git://github.com/CatDancer/arc.git tag catdancer.arc3rc3.table-reader-writer0
+ $ git pull git://github.com/CatDancer/arc.git tag catdancer.arc3rc3.toerr0
+")
+
+     (p () "Your arc directory will now contain a copy of Arc with these two patches applied, along with a couple of other patches (scheme-values and list-writer) which were needed by the patches you asked for.")
+
+     ))
+
 ))
 
 (def gen-bugs (hack)
@@ -1477,6 +1519,20 @@ table.code td.arrow {
 table.code td.spacer {
   border: none;
   padding: 0;
+}
+
+table.foo {
+  border-collapse: collapse;
+}
+
+table.foo th {
+  border: none 0px;
+}
+
+table.foo td {
+  vertical-align: baseline;
+  padding: 1em;
+  border: 1px solid #ccc;
 }
 
 ")
