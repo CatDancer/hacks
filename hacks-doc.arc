@@ -8,6 +8,176 @@
 
 (= hacks* (list
 
+  (obj
+   name "using-git-commits-for-hacks"
+   type 'howto
+   short "(draft) Using Git Commits for Hacks"
+   comment "http://arclanguage.org/item?id=9481"
+
+   long
+   `((p () (i ()
+       "I previously wrote "
+       (a (href "sharing-hacks.html") "Sharing Arc Hacks")
+       " where I described my desire that every patch to Arc could be available as a minimal set of differences from Arc, and how to use Git as a way to do that.  I then recently tried to write something about how I thought the same idea could be used for libraries, but I wasn't able to get my thoughts in order about it.  So I wrote this instead, which talks about the mechanics of how to use Git to implement the idea.  But since I haven’t been able to write much yet about why I think this would be a good idea, I wouldn’t be surprised if you’re reading this and thinking “yeah but WHY would you want to do this??”"))
+ 
+     (p () "I’m exploring an idea of using Git to load libraries and patches and to resolve dependencies among them.  In this usage:")
+
+     (ul ()
+       (li () "A Git checkout is a program or library and the libraries and patches that it uses.")
+       (li () "A Git repository can store the code and the development history for multiple libraries and programs.")
+       (li () "Each Git commit represents a particular library or patch.")
+       (li () "Dependencies (library A uses library B which needs library C) are represented by ancestors of commits, and are automatically pulled in using Git’s merge mechanism."))
+
+     (p () "In contrast, this is how Git is normally used:")
+
+     (ul ()
+       (li () "A Git checkout is a particular version of one program or library.")
+       (li () "A Git repository stores the code and development history for that program or library.")
+       (li () "Each Git commit is a snapshot of the development history.")
+       (li () "Loading libraries and dependencies are managed in some way outside of Git: for example, one library may “import”, “use”, or “require” another."))
+
+     (p () "Git wasn’t designed to be used in the first way, so there is some awkwardness.  It seems to mostly work OK though.  Down the road we may build some utilities on top of Git that are easier to use, or write something that uses some of the ideas from Git but is simpler.")
+
+     (p () "As an example of using Git to pull in some libraries and their prerequisites, suppose someone wanted to write a program that used my table-reader-writer hack and my mz hack.  They could start off with:")
+
+     ,(code "
+ $ mkdir myprog
+ $ cd myprog
+ $ git init
+ $ git pull git://github.com/CatDancer/arc.git tag arc2.table-reader-writer0
+ $ git pull git://github.com/CatDancer/arc.git tag arc2.mz0
+")
+
+     (p () (i () "[tag names are going to be changed to be globally unique]"))
+
+     (p () "Dependencies are automatically pulled in by this process. For example, table-reader-writer builds upon arc2, so arc2 is pulled in.  table-reader-writer also needs the list-writer and scheme-values hacks, so those are pulled in as well.")
+
+     (p () "This mechanism doesn’t distinguish between “patches” and “libraries” and so works the same for either.  I use “hack” as a collective term to mean something that is either a patch or a library. "
+       (i () "[will write something about how I think the conciseness of Arc enables a style of programming libraries which doesn’t need a lot of upfront engineering]"))
+
+     (p () "Some hacks will conflict with other hacks.  To resolve the conflict, a programmer can publish a commit which resolves the conflict.")
+
+     (p () "In Git tag names are not usually globally unique; a typical tag name in normal Git usage will be something like “v4.01”.  If we’re going to be using Git to combine hacks written by different people then we’ll need unique tag names.  I propose using our Arc forum username as a prefix, which will be good enough for now.")
+
+     (h3 () "Publishing a Library")
+
+     (p () "Suppose you have some libraries that you’d like to publish using this approach.  You’d do each library separately, but you can do all your work within one Git repository if you wish.  Start off with a clean copy of arc3 (or whatever is your base):")
+
+     (p () (i () "[these tag names don’t exist yet]"))
+
+     ,(code "
+ $ git checkout pg.arc3
+")
+
+     (p () "As “pg.arc3” is a tag, Git will warn you that you are no longer on a branch.  This is OK, you don’t need a branch for the following, though you can work within a branch if you want to.  Then pull in any hacks that your library depends on:")
+
+     ,(code "
+ $ git merge catdancer.arc3.table-reader-writer0
+ $ git merge someone-else.some-other-library
+")
+
+     (p () "Make the changes which implement your library in your working directory.  You can do this by hand, or, if you’ve developed your library using Git in the normal way with branches and commits keeping track of your development history, you can use “git-apply” or “git-cherry-pick” with the “-no-commit” option to pull the changes into your working directory without committing them.")
+
+     (p () "Don’t use any Git command which commits for you: that will automatically add your development history as ancestors to the commit, and we only want prerequisite hacks as commit ancestors.")
+
+     (p () "Now commit your changes:")
+
+     ,(code "
+ $ git commit -m 'my library v1'
+")
+
+     (p () "You can see which ancestor commits were included with:")
+
+     ,(code "
+ $ git log --decorate --topo-order
+")
+
+     (p () "The “decorate” option shows you the tag name associated with each commit, and “--topo-order” shows you the commits in dependency order instead of in order by the date in which they were created.  What you want to see is that only your library and it’s prerequisites appear: that you don’t have other unrelated hacks or development history commits included.")
+
+     (p () "If you make a mistake, just clean out your changes with “git-reset --hard” and start over with the checkout command.")
+
+     (p () "Looks good?  Now tag it:")
+
+     ,(code "
+ $ git tag yourname.library-name-v1
+")
+
+     (p () "If you’re already set up with a remote public repository such as at Github, you can push your changes to publish them:")
+
+     ,(code "
+ $ git push --tags
+")
+
+     (p () "If you don’t have a public Git repository yet, you can go over to github.com, sign up for a free account, and create a new repository.  Github will give you some instructions on what to do next, use the ones under “Existing Git Repo”:")
+
+     ,(code "
+ cd existing_git_repo
+ git remote add origin git@github.com:...
+ git push origin master
+")
+
+     (p () "and then do the “git push --tags”.")
+
+     (p () "If you accidentally publish a tag to some bad code or a commit which has some unneeded ancestor commits, delete the tag locally:")
+
+     ,(code "
+ $ git tag -d yourname.library-name-v1
+")
+     (p () "and then explicitly push that now non-existent tag in order to get it deleted on the remote public repository. (no, I don’t try to think too hard about the logic of this... :)")
+
+     ,(code "
+ $ git push origin :refs/tags/yourname.library-name-v1
+")
+
+     (p () "(If you’re wondering how I ever figured that out, the answer is simple: I did a Google search for “How the @%&amp;! do I delete a remote tag in git??!”)")
+
+     (p () "Never reuse a tag name for a different commit after you’ve published it.  Instead, make up a new tag name, such as “yourname.library-name-v2”.  If people ask you what happened to v1, just say it was a bad commit you published accidentally.")
+
+     (p () "OK!  You’ve published your commit, so now other people can get your library:")
+
+     ,(code "
+ $ git pull git://github.com/yourname/yourrepo.git yourname.library-name-v2
+")
+
+
+  (h3 () "Resolving Conflicts")
+
+  (p () "Sometimes two hacks will conflict, either in the source code (for example, two patches change the same section of code) or semantically (for example, two libraries try to define a function with the same name).")
+
+  (p () "Two resolve the conflict, publish a commit which has the two conflicting hacks as ancestor commits:")
+
+  ,(code "
+ $ git merge hack-a
+ $ git merge hack-b
+ [fix fix fix]
+ $ git commit -m 'merge hack-a and hack-b'
+ $ git tag myname.hack-a.hack-b
+ $ git push --tags
+")
+
+  (p () "Then when someone wants to use hack-a and hack-b, they can say, “hey! you've already fixed this!” and grab your myname.hack-a.hack-b.")
+
+  (p () "You can do the same thing if you need to advertise that two hacks <i>don’t</i> conflict with each other.  For example, I published a “toerr” hack which built upon arc2.  As it happens, it merges fine against arc3:")
+
+  ,(code "
+ $ git checkout pg.arc3
+ $ git merge catdancer.arc2.toerr0
+")
+
+  (p () "But if people were worried if it worked with arc3, I could publish that commit:")
+
+  ,(code "
+ $ git tag catdancer.arc3.toerr0
+")
+
+  (p () "While in this case there are no code differences between the arc2 versions of toerr and the arc3 version, my publishing this commit with pg.arc3 and catdancer.arc2.toerr0 as ancestors is my statement that they work together.")
+
+  (h3 () "Unresolved Issues")
+
+  (p () "Loading libraries by adding them to libs.arc will almost always produce a unnecessary conflict in libs.arc when two unrelated libraries are merged.  That can be resolved by having Arc load all the .arc files in a lib directory, but we would still need some mechanism to have libraries loaded in the right order when one library uses macros defined in another library.")
+  
+     ))
+
  (obj
   name "sharing-hacks"
   type 'howto
@@ -1009,227 +1179,59 @@ nil
    (toerr:ppr ...)
 ")))
 
- (obj
-  name "arc-libaries"
-  type 'howto
-  short "Arc Libraries"
+;;  (obj
+;;   name "arc-libaries"
+;;   type 'howto
+;;   short "Arc Libraries"
+
+;;   long
+;;   `((p () "This howto proposes an approach for writing Arc libraries, and examines the usefulness of git for supporting this approach.")
+
+;;     (h3 () "The evolution of libraries")
+
+;;     (p ()
+;;        "In the beginning there was Arc:")
+
+;;     ,(code "
+;;  arc
+;; ")
+
+;;     (p ()
+;;        "Then programs written in Arc:")
+
+;;     ,(code "
+;;       program-a
+;;       program-b
+;;  arc  program-c
+;;       program-d
+;;       program-e
+;; ")
+
+;;     (p ()
+;;        "And some of the code in the programs could be usefully extracted into libaries, making the total amount of code needed less:")
+
+;;     ,(code "
+;;                  program-a
+;;       library-a  program-b
+;;  arc  library-b  program-c
+;;       library-c  program-d
+;;                  program-e
+;; ")
+;;     (p () "For these particular set of five programs, there is some way of writing the libraries A-C and the programs A-E so that the total amount of code in the libraries and programs is at a minimum.")
+
+;;     (p () "If the libraries and programs are written in this way, then when we add another program F we will likely find that F needs some features that the libraries don’t yet provide (since they only implement the minimum needed for the programs A-E), and so some libraries may need to be updated:")
+
+;;     ,(code "
+;;                   program-a
+;;       library-a'  program-b
+;;  arc  library-b   program-c
+;;       library-c'  program-d
+;;                   program-e
+;;                   program-f
+;; ")
+
+;;     ))
 
-  long
-  `((p () "This howto proposes an approach for writing Arc libraries, and examines the usefulness of git for supporting this approach.")
-
-    (h3 () "The evolution of libraries")
-
-    (p ()
-       "In the beginning there was Arc:")
-
-    ,(code "
- arc
-")
-
-    (p ()
-       "Then programs written in Arc:")
-
-    ,(code "
-      program-a
-      program-b
- arc  program-c
-      program-d
-      program-e
-")
-
-    (p ()
-       "And some of the code in the programs could be usefully extracted into libaries, making the total amount of code needed less:")
-
-    ,(code "
-                 program-a
-      library-a  program-b
- arc  library-b  program-c
-      library-c  program-d
-                 program-e
-")
-    (p () "For these particular set of five programs, there is some way of writing the libraries A-C and the programs A-E so that the total amount of code in the libraries and programs is at a minimum.")
-
-    (p () "If the libraries and programs are written in this way, then when we add another program F we will likely find that F needs some features that the libraries don’t yet provide (since they only implement the minimum needed for the programs A-E), and so some libraries may need to be updated:")
-
-    ,(code "
-                  program-a
-      library-a'  program-b
- arc  library-b   program-c
-      library-c'  program-d
-                  program-e
-                  program-f
-")
-
-    ))
-
-  (obj
-   name "using-git-commits-for-hacks"
-   type 'howto
-   short "(draft) Using Git Commits for Hacks"
-
-   long
-   `((p () (i ()
-       "I previously wrote "
-       (a (href "sharing-hacks.html") "Sharing Arc Hacks")
-       " where I described my desire that every patch to Arc could be available as a minimal set of differences from Arc, and how to use Git as a way to do that.  I then recently tried to write something about how I thought the same idea could be used for libraries, but I wasn't able to get my thoughts in order about it.  So I wrote this instead, which talks about the mechanics of how to use Git to implement the idea.  But I haven’t written much yet about why I think this would be a good idea, so don’t be surprised if you’re reading this and thinking “yeah but WHY would you want to do this??”"))
- 
-     (p () "I’m exploring an idea of using Git to load libraries and patches and to resolve dependencies among them.  In this usage:")
-
-     (ul ()
-       (li () "A Git checkout is a program or library and the libraries and patches that it uses.")
-       (li () "A Git repository can store the code and the development history for multiple libraries and programs.")
-       (li () "Each Git commit represents a particular library or patch.")
-       (li () "Dependencies (library A uses library B which needs library C) are represented by ancestors of commits, and are automatically pulled in using Git’s merge mechanism."))
-
-     (p () "In contrast, this is how Git is normally used:")
-
-     (ul ()
-       (li () "A Git checkout is a particular version of one program or library.")
-       (li () "A Git repository stores the code and development history for that program or library.")
-       (li () "Each Git commit is a snapshot of the development history.")
-       (li () "Loading libraries and dependencies are managed in some way outside of Git: for example, one library may “import”, “use”, or “require” another."))
-
-     (p () "Git wasn’t designed to be used in the first way, so there is some awkwardness.  It seems to mostly work OK though.  Down the road we may build some utilities on top of Git that are easier to use, or write something that uses some of the ideas from Git but is simpler.")
-
-     (p () "As an example of using Git to pull in some libraries and their prerequisites, suppose someone wanted to write a program that used my table-reader-writer hack and my mz hack.  They could start off with:")
-
-     ,(code "
- $ mkdir myprog
- $ cd myprog
- $ git init
- $ git pull git://github.com/CatDancer/arc.git tag arc2.table-reader-writer0
- $ git pull git://github.com/CatDancer/arc.git tag arc2.mz0
-")
-
-     (p () (i () "[tag names are going to be changed to be globally unique]"))
-
-     (p () "Dependencies are automatically pulled in by this process. For example, table-reader-writer builds upon arc2, so arc2 is pulled in.  table-reader-writer also needs the list-writer and scheme-values hacks, so those are pulled in as well.")
-
-     (p () "This mechanism doesn’t distinguish between “patches” and “libraries” and so works the same for either.  I use “hack” as a collective term to mean something that is either a patch or a library. "
-       (i () "[will write something about how I think the conciseness of Arc enables a style of programming libraries which doesn’t need a lot of upfront engineering]"))
-
-     (p () "Some hacks will conflict with other hacks.  To resolve the conflict, a programmer can publish a commit which resolves the conflict.")
-
-     (p () "In Git tag names are not usually globally unique; a typical tag name in normal Git usage will be something like “v4.01”.  If we’re going to be using Git to combine hacks written by different people then we’ll need unique tag names.  I propose using our Arc forum username as a prefix, which will be good enough for now.")
-
-     (h3 () "Publishing a Library")
-
-     (p () "Suppose you have some libraries that you’d like to publish using this approach.  You’d do each library separately, but you can do all your work within one Git repository if you wish.  Start off with a clean copy of arc3 (or whatever is your base):")
-
-     (p () (i () "[these tag names don’t exist yet]"))
-
-     ,(code "
- $ git checkout pg.arc3
-")
-
-     (p () "As “pg.arc3” is a tag, Git will warn you that you are no longer on a branch.  This is OK, you don’t need a branch for the following, though you can work within a branch if you want to.  Then pull in any hacks that your library depends on")
-
-     ,(code "
- $ git merge catdancer.arc3.table-reader-writer0
- $ git merge someone-else.some-other-library
-")
-
-     (p () "Make the changes which implement your library in your working directory.  You can do this by hand, or, if you’ve developed your library using Git in the normal way with branches and commits keeping track of your development history, you can use “git-apply” or “git-cherry-pick” with the “-no-commit” option to pull the changes into your working directory without commiting them.")
-
-     (p () "Don’t use any Git command which commits for you: that will automatically add your development history as ancestors to the commit, and we only want prerequisite hacks as commit ancestors.")
-
-     (p () "Now commit your changes:")
-
-     ,(code "
- $ git commit -m 'my library v1'
-")
-
-     (p () "You can see which ancestor commits were included with:")
-
-     ,(code "
- $ git log --decorate --topo-order
-")
-
-     (p () "The “decorate” option shows you the tag name associated with each commit, and “--topo-order” shows you the commits in dependency order instead of in order by the date in which they were created.  What you want to see is that only your library and it’s prerequisites appear: that you don’t have other unrelated hacks or development history commits included.")
-
-     (p () "If you make a mistake, just clean out your changes with “git-reset --hard” and start over with the checkout command.")
-
-     (p () "Looks good?  Now tag it:")
-
-     ,(code "
- $ git tag yourname.library-name-v1
-")
-
-     (p () "If you’re already set up with a remote public repository such as at Github, you can push your changes to publish them:")
-
-     ,(code "
- $ git push --tags
-")
-
-     (p () "If you don’t have a public Git repository yet, you can go over to github.com, sign up for a free account, and create a new repository.  Github will give you some instructions on what to do next, use the ones under “Existing Git Repo”:")
-
-     ,(code "
- cd existing_git_repo
- git remote add origin git@github.com:...
- git push origin master
-")
-
-     (p () "and then do the “git push --tags”.")
-
-     (p () "If you accidentally publish a tag to some bad code or a commit which has some unneeded ancestor commits, delete the tag locally:")
-
-     ,(code "
- $ git tag -d yourname.library-name-v1
-")
-     (p () "And then explicitly push that now non-existant tag in order to get it deleted on the remote public repository. (I try not to think too hard about the logic of this...):")
-
-     ,(code "
- $ git push origin :refs/tags/yourname.library-name-v1
-")
-
-     (p () "(If you’re wondering how I ever figured that out, the answer is simple: I did a Google search for “How the @%&amp;! do I delete a remote tag in git??!”)")
-
-     (p () "Never reuse a tag name for a different commit after you’ve published it.  Instead, make up a new tag name, such as “yourname.library-name-v2”.  If people ask you what happened to v1, just say it was a bad commit you published accidentally.")
-
-     (p () "OK!  You’ve published your commit, so now other people can get your library:")
-
-     ,(code "
- $ git pull git://github.com/yourname/yourrepo.git yourname.library-name-v2
-")
-
-
-  (h3 () "Resolving Conflicts")
-
-  (p () "Sometimes two hacks will conflict, either in the source code (two patches change the same section of code) or semantically (two libraries try to define a function with the same anme).")
-
-  (p () "Two resolve the conflict, publish a commit which has the two conflicting hacks as ancestor commits:")
-
-  ,(code "
- $ git merge hack-a
- $ git merge hack-b
- [fix fix fix]
- $ git commit -m 'merge hack-a and hack-b'
- $ git tag myname.hack-a.hack-b
- $ git push --tags
-")
-
-  (p () "Then when someone wants to use hack-a and hack-b, they can say, “hey! you've already fixed this!” and grab your myname.hack-a.hack-b.")
-
-  (p () "You can do the same thing if you need to advertise that two hacks <i>don’t</i> conflict with each other.  For example, I published a “toerr” hack which built upon arc2.  As it happens, it merges fine against arc3:")
-
-  ,(code "
- $ git checkout pg.arc3
- $ git merge catdancer.arc2.toerr0
-")
-
-  (p () "But if people were worried if it worked with arc3, I could publish that commit:")
-
-  ,(code "
- $ git tag catdancer.arc3.toerr0
-")
-
-  (p () "While in this case there are no code differences between the arc2 versions of toerr and the arc3 version, my publishing this commit with pg.arc3 and catdancer.arc2.toerr0 as ancestors is my statement that they work together.")
-
-  (h3 () "Unresolved Issues")
-
-  (p () "Loading libraries by adding them to libs.arc will almost always produce a unnecessary conflict in libs.arc when two unrelated libraries are merged.  That can be resolved by having Arc load all the .arc files in a lib directory, but we would still need some mechanism to have libraries loaded in the right order when one library uses macros defined in another library.")
-  
-     ))
 ))
 
 (def gen-bugs (hack)
