@@ -1274,7 +1274,7 @@ nil
                 ("toerr" "Send output going to stdout to stderr instead" "catdancer.arc3rc3.toerr0")
                 ("srv-mime" "Fix the mime types returned for static files with the .css and .txt extensions." "catdancer.arc3rc3.srv-mime0")
                 (nil "Add the .js static filetype" "catdancer.arc3rc3.srv-js-filetype0")
-                (nil "Extract a function named *dispatch* from *respond* in srv.arc, creating a useful hook to use with *extend* set up your own rules for responding to requests." "catdancer.arc3rc3.srv-dispatch0")
+                (nil "Extract a function named *dispatch* from *respond* in srv.arc, creating a useful hook to use with *extend* set up your own rules for responding to requests." "catdancer.arc3rc3.srv-dispatch1")
                 )))
      (p (style "margin-top: 2em") "Each hack may be applied to your copy of Arc independently.  For example, if you happened to want the table-reader-writer and the toerr hacks, you could type:")
 
