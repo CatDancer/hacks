@@ -182,6 +182,26 @@
 
   (p () "While in this case there are no code differences between the arc2 versions of toerr and the arc3 version, my sharing this commit with pg.arc3 and catdancer.arc2.toerr0 as ancestors is a way for me to say that they work together.")
 
+  (h3 () "Including ancestor commits without their code")
+
+  (p () "Sometimes we’ll want to include a commit as an ancestor of our commit, even though we're not using any code from it.")
+
+  (p () "For example, suppose Alice shares a library L1, and Bob creates a bug fix for that library F1.  Then Cindy writes a library L2 which uses L1 and needs the bug fix F1.  The commit for L2 will have F1 as a parent commit, so that it gets pulled in automatically if someones uses L2.")
+
+  (p () "Imagine that F1 is actually a pretty ugly fix, and we’re writing a fix F2 which is a better replacement.  F2 fixes the problem that F1 fixed, but in a different and better way, and without using any of F1’s code.")
+
+  (p () "We’d like F2 to have F1 as a parent commit, because then someone can merge F2 and L2 and everything will work.  If F2 didn't have F1 as a parent commit, then when someone merged L2, Git would attempt to also merge in the F1 code.")
+
+  (p () "If while preparing the F2 commit we were to type “<code>git merge --no-commit F1</code>”, this would do two things: it would add the F1 commit to our <code>.git/MERGE_HEAD</code> so that it will be included as a parent commit later when we run “<code>git commit</code>”, and it would pull in the F1 changes into our working directory. We’d then need to tediously remove the F1 changes.")
+
+  (p () "We can actually just add the F1 commit to our <code>MERGE_HEAD</code> ourselves, without using <code>git merge</code> at all:")
+
+  ,(code "
+ $ git rev-parse F1 >>.git/MERGE_HEAD
+")
+
+  (p () "Now F1 will be included as one of the parent commits when we “<code>git commit</code>”, without having any of F1’s code in our working directory.")
+
   (h3 () "Unresolved Issues")
 
   (p () "Loading libraries by adding them to libs.arc will almost always produce a unnecessary conflict in libs.arc when two unrelated libraries are merged.  That can be resolved by having Arc load all the .arc files in a lib directory, but we would still need some mechanism to have libraries loaded in the right order when one library uses macros defined in another library.")
