@@ -376,6 +376,56 @@
 
     ))
  
+;;     (p ()
+;;       "One thing I notice about Arc is that as the code becomes more concise, I have a greater desire to start making changes to it.")
+
+;;     (p ()
+;;       "As an example, take a look at Paul Graham’s example of "
+;;       (a (href "http://www.archub.org/rewrite-login") "Rewriting the login code")
+;;       ".")
+
+;;     (p ()
+;;       "The “before” is 
+
+;;     (p ()
+;;       "In all the major languages today, you’re free to choose to use or not use a library in a program, and if you want to use a library, you can easily “load”, “import”, or “require” it.")
+
+ (obj
+  name "libs"
+  type 'howto
+  short "Libraries as hacks"
+
+  long
+  `((p () "Have an idea, take it to its logical extreme... and see what happens :)")
+
+    (p ()
+      "In "
+      (a (href "sharing-hacks.html") "Sharing Arc hacks")
+      " and continued in "
+      (a (href "using-git-commits-for-hacks") "Using Git Commits for Hacks")
+      ", I explored my idea of making patches more like libraries. In particular, making it possible to easily choose which patches you wanted in your program, just as how in a typical programming environment you’re free to choose which libraries you want to use.")
+
+    (p ()
+      "I used Git as a prototype, to implement a patch loading mechanism.  The result is awkward to use, which isn’t too surprising since of course Git was designed as a version control system.  Going forward we might write some easier to use utilities on top of Git, or perhaps replace Git with something else.") 
+    (p ()
+      "Now I’m going further and exploring, “what if we made libraries more like patches”?")
+
+    (p ()
+      "In the traditional way of thinking, you’re not supposed to have to change a library.  Use a library, call a library, maybe configure a library, but not change it.  If you have to change the source code of a library to use it, something’s wrong: it doesn’t have the right features, or isn’t configurable enough, or it’s buggy, or it has bad design, or something.  It’s not mature.")
+
+    (p ()
+      "One thing I’ve noticed about the concise parts of Arc’s code is that I don’t mind changing them.  Take a look at Paul Graham’s example of "
+      (a (href "http://www.archub.org/rewrite-login") "Rewriting the login code")
+      ".  The “before” code isn’t all that bad.  I wouldn’t want to go in and change it if I didn’t have to, but I could if I needed to.  If the code needed some configuration, I’d prefer to be able to do that with a configuration file or with some kind of API.")
+
+    (p () "The “after” code on the other hand is so simple that if I want to change its behavior, it’s as easy for me to change the code as it would be for me to edit a configuration file or make some “API” calls.")
+
+    (p () "The effort to write libraries so that no one ever has to change them has a cost: the extra code written to allow the behavior of the library to be changed in different ways and for features that no one is using now but might need to in the future.")
+
+    (p () "Ironically, I’ve often found that the ")
+
+    ))
+
  (obj
    name "emacs-utf8"
    type 'howto
