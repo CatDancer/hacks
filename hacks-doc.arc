@@ -15,9 +15,7 @@
    comment "http://arclanguage.org/item?id=9481"
 
    long
-   `((p () "Here I show how to use Git as a mechanism for programmers to load libraries and patches, as an alternative to the usual approach of downloading, installing, and loading libraries into a program.")
-
-     (p () "This is using Git in an unusual way, as Git is normally used as a version control system.  You can still use Git as a version control system to develop a library, if you want to, and then publish your library using this system; I describe the details below.")
+   `((p () "Here I show how to use Git as a mechanism for programmers to load libraries and patches, as an alternative to the usual approach of downloading, installing, and loading libraries into a program. This is using Git in an unusual way, as Git is normally used as a version control system.")
 
      (p () "With this mechanism patches gain the ease of use and the flexibility of libraries: an end-programmer can pick and choose which patches they want, and patches can be loaded in the same way and just as easily as loading libraries.")
 
@@ -25,7 +23,7 @@
 
      (p () "As patches and libraries become more alike and can be shared and used in the same way, I use “hack” as a generic term to mean something which is either a patch or a library, or a bit of both.")
 
-     (p () "Because I’ve just started working on this idea, the examples show using raw Git commands to pick which hacks you want.  Presumably, if this works out, we’ll eventually write some higher level commands that will be easier to use.")
+     (p () "Because I’ve just started working on this idea, the examples show using raw Git commands to pick which hacks you want.  Presumably, if this works out, we’ll eventually write some higher level commands that will be easier to use, or maybe even implement something ourselves that isn’t as complicated as Git is.")
 
      (h3 () "Using Git for hacks vs. using Git as a version control system")
 
