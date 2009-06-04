@@ -1,3 +1,3 @@
 #!/bin/sh
 
-/tmp/myarc/run '(load "~/git/hacks/go.arc")'
+~/git/myarc/run '(load "~/git/hacks/go.arc")'
