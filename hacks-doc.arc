@@ -409,6 +409,7 @@
   name "libs"
   type 'howto
   short "Libraries as hacks"
+  comment "http://arclanguage.org/item?id=9561"
 
   long
   `((p () (i () "Have an idea, take it to its logical extreme... and see what happens :-)"))
