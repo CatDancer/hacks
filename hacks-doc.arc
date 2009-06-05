@@ -1333,16 +1333,16 @@ nil
                      ,title)
                    (td (valign bottom)
                      (code () ,tag))))
-              '(("exit-on-eof" "Exit Arc on ^D" "catdancer.arc3rc3.exit-on-eof0")
-                ("table-reader-writer" "Reader / writer for Arc tables" "catdancer.arc3rc3.table-reader-writer0")
-                (nil "Merge of exit-on-eof with scheme-values, used by table-reader-writer" "catdancer.arc3rc3.exit-on-eof0.scheme-values0")
-                ("testify-iso" "Allow lists to be used as the first argument to Arc's list sequence functions" "catdancer.arc3rc3.testify-iso0")
-                ("testify-table" "Treat tables like functions in Arc's list sequence functions" "catdancer.arc3rc3.testify-table0")
-                (nil "Merge of testify-iso and testify-table" "catdancer.arc3rc3.testify-table0.testify-iso0")
-                ("toerr" "Send output going to stdout to stderr instead" "catdancer.arc3rc3.toerr0")
-                ("srv-mime" "Fix the mime types returned for static files with the .css and .txt extensions." "catdancer.arc3rc3.srv-mime0")
-                (nil "Add the .js static filetype" "catdancer.arc3rc3.srv-js-filetype0")
-                (nil "Extract a function named *dispatch* from *respond* in srv.arc, creating a useful hook to use with *extend* set up your own rules for responding to requests." "catdancer.arc3rc3.srv-dispatch1")
+              '(("exit-on-eof" "Exit Arc on ^D" "catdancer.arc3rc4.exit-on-eof0")
+                ("table-reader-writer" "Reader / writer for Arc tables" "catdancer.arc3rc4.table-reader-writer0")
+                (nil "Merge of exit-on-eof with scheme-values, used by table-reader-writer" "catdancer.arc3rc4.exit-on-eof0.scheme-values0")
+                ("testify-iso" "Allow lists to be used as the first argument to Arc's list sequence functions" "catdancer.arc3rc4.testify-iso0")
+                ("testify-table" "Treat tables like functions in Arc's list sequence functions" "catdancer.arc3rc4.testify-table0")
+                (nil "Merge of testify-iso and testify-table" "catdancer.arc3rc4.testify-table0.testify-iso0")
+                ("toerr" "Send output going to stdout to stderr instead" "catdancer.arc3rc4.toerr0")
+                ("srv-mime" "Fix the mime types returned for static files with the .css and .txt extensions." "catdancer.arc3rc4.srv-mime0")
+                (nil "Add the .js static filetype" "catdancer.arc3rc4.srv-js-filetype0")
+                (nil "Extract a function named *dispatch* from *respond* in srv.arc, creating a useful hook to use with *extend* set up your own rules for responding to requests." "catdancer.arc3rc4.srv-dispatch1")
                 )))
      (p (style "margin-top: 2em") "Each hack may be applied to your copy of Arc independently.  For example, if you happened to want the table-reader-writer and the toerr hacks, you could type:")
 
@@ -1350,8 +1350,8 @@ nil
  $ mkdir arc
  $ cd arc
  $ git init
- $ git pull git://github.com/CatDancer/arc.git tag catdancer.arc3rc3.table-reader-writer0
- $ git pull git://github.com/CatDancer/arc.git tag catdancer.arc3rc3.toerr0
+ $ git pull git://github.com/CatDancer/arc.git tag catdancer.arc3rc4.table-reader-writer0
+ $ git pull git://github.com/CatDancer/arc.git tag catdancer.arc3rc4.toerr0
 ")
 
      (p () "Your arc directory will now contain a copy of Arc with these two patches applied, along with a couple of other patches (scheme-values and list-writer) which were needed by the patches you asked for.")
