@@ -45,10 +45,6 @@
 
      (p () "You can use Git for both if you want, even in the same Git respository: you can develop a library using Git in the usual way as a version control system keeping track of your development process and then use Git to share your library.")
 
-     (p () "However you can’t take a version control style commit with development history ancestors and share it directly.  Instead you need to create a new commit which has only prerequisite hacks as ancestors.  The process is somewhat similar to “"
-       (a (href "http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#patch-series") "creating the perfect patch series")
-       "” described in the Git manual.")
-
      (h3 () "Using Git to pull in some hacks")
 
      (p () "As an example of using Git to pull in some libraries and their prerequisites, suppose someone wanted to write a program that used my table-reader-writer hack and my mz hack.  They could start off with:")
@@ -88,7 +84,7 @@
 
      (p () "Make the changes which implement your library in your working directory.  You can do this by hand, or, if you’ve developed your library using Git in the normal way with branches and commits keeping track of your development history, you can use “git-apply” or “git-cherry-pick” with the “-no-commit” option to pull the changes into your working directory without committing them.")
 
-     (p () "Don’t use any Git command which commits for you: that will automatically add your development history as ancestors to the commit, and we only want prerequisite hacks as commit ancestors.")
+     (p () "Be careful with Git commands which commit for you: that will automatically add your development history as ancestors to the commit.  That’s OK if you want to publish your development history publicly, but there’s no going back: once you’ve published an ancestor of a commit, you need to keep it in order for the end-programmer to be able to merge in new versions of your library.")
 
      (p () "Now commit your changes:")
 
@@ -102,7 +98,7 @@
  $ git log --decorate --topo-order
 ")
 
-     (p () "The “decorate” option shows you the tag name associated with each commit, and “--topo-order” shows you the commits in dependency order instead of in order by the date in which they were created.  What you want to see is that only your library and it’s prerequisites appear: that you don’t have other unrelated hacks or development history commits included.")
+     (p () "The “decorate” option shows you the tag name associated with each commit, and “--topo-order” shows you the commits in dependency order instead of in order by the date in which they were created.  What you want to see is that only your library and it’s prerequisites appear: that you don’t have other unrelated hacks or development history commits included that you don’t want.")
 
      (p () "If you make a mistake, just clean out your changes with “git-reset --hard” and start over with the checkout command.")
 
