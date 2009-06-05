@@ -25,6 +25,11 @@
 
      (p () "Because I’ve just started working on this idea, the examples show using raw Git commands to pick which hacks you want.  Presumably, if this works out, we’ll eventually write some higher level commands that will be easier to use, or maybe even implement something ourselves that isn’t as complicated as Git is.")
 
+     (p ()
+       "See "
+       (a (href "libs.html") "libs")
+       " for a mechanism to load libraries using Git without getting gratuitous Git conflicts.")
+
      (h3 () "Using Git for hacks vs. using Git as a version control system")
 
      (p () "When using Git for hacks:")
@@ -196,10 +201,6 @@
 
   (p () "Now F1 will be included as one of the parent commits when we “<code>git commit</code>”, without having any of F1’s code in our working directory.")
 
-  (h3 () "Unresolved Issues")
-
-  (p () "Loading libraries by adding them to libs.arc will almost always produce a unnecessary conflict in libs.arc when two unrelated libraries are merged.  That can be resolved by having Arc load all the .arc files in a lib directory, but we would still need some mechanism to have libraries loaded in the right order when one library uses macros defined in another library.")
-  
      ))
 
  (obj
@@ -418,7 +419,7 @@
       "In "
       (a (href "sharing-hacks.html") "Sharing Arc hacks")
       " and continued in "
-      (a (href "using-git-commits-for-hacks") "Using Git Commits for Hacks")
+      (a (href "using-git-commits-for-hacks.html") "Using Git Commits for Hacks")
       ", I explored my idea of making patches more like libraries: making it easy to choose which patches you wanted in your program, just as how in a typical programming environment you’re free to choose which libraries you want to use.")
 
     (p ()
