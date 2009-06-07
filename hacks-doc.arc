@@ -415,6 +415,8 @@
   long
   `((p () (i () "Have an idea, take it to its logical extreme... and see what happens :-)"))
 
+    (p () "UPDATE: and the answer is this turns out to be a bad idea because it changes loading libraries from something that you can do dynamically at the Arc prompt to something you do staticly before starting Arc.")
+
     (p ()
       "In "
       (a (href "sharing-hacks.html") "Sharing Arc hacks")
