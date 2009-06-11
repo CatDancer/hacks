@@ -1,0 +1,23 @@
+ (obj
+   name 'emacs-utf8
+   short "How to convince Emacs to save .arc files in UTF-8"
+   nodescription t
+   nolicense t
+   
+   long
+   `((p () "MzScheme supports Unicode and defaults to reading and writing files in the Unicode UTF-8 encoding, so you can conveniently use Unicode characters in both strings and symbols.")
+
+     (p ()
+       "UTF-8 is a superset of ASCII, so an ASCII file can be read in as a UTF-8 document without any special translation.  If a Unicode document contains only ASCII characters, then when it is written out as a UTF-8 file it will be a plain ASCII file.")
+
+     (p ()
+       "However, if you use Emacs as your editor, there was some ancient file archive format that had an "
+       ,(qu "arc") " extension, so by default Emacs will save <code>.arc</code> files without any translation from Emacs&rsquo; internal representation of Unicode characters.  This means that while you can easily type or copy Unicode characters into your Emacs buffer, when you save your file the characters will turn into garbage.")
+
+     (p () "Add this to your <code>.emacs</code> file to have <code>.arc</code> files saved in UTF-8:")
+
+     ,(indent
+        `((pre ()
+            "(setq auto-coding-alist\n"
+            "  (cons '(\"\\\\.arc\\\\'\" . utf-8) auto-coding-alist))\n")))
+      ))

@@ -1,0 +1,31 @@
+diff --git a/ac.scm b/ac.scm
+index 3f1663b..65b95d7 100644
+--- a/ac.scm
++++ b/ac.scm
+@@ -188,10 +188,15 @@
+ (define (ac-global-name s)
+   (string->symbol (string-append "_" (symbol->string s))))
+ 
++(define _defined-var* (make-hash-table 'equal))
++
++(define (defined-var? s)
++  (not (ar-false? (hash-table-get _defined-var* s #f))))
++
+ (define (ac-var-ref s env)
+-  (if (lex? s env)
+-      s
+-      (ac-global-name s)))
++  (cond ((lex? s env)     s)
++        ((defined-var? s) (list (ac-global-name s)))
++        (#t               (ac-global-name s))))
+ 
+ ; quasiquote
+ 
+@@ -366,6 +371,7 @@
+                (cond ((eqv? a 'nil) (err "Can't rebind nil"))
+                      ((eqv? a 't) (err "Can't rebind t"))
+                      ((lex? a env) `(set! ,a zz))
++                     ((defined-var? a) `(,(ac-global-name a) zz))
+                      (#t `(namespace-set-variable-value! ',(ac-global-name a) 
+                                                          zz)))
+                'zz))

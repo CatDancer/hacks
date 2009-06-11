@@ -1,0 +1,8 @@
+; -*- scheme -*-
+
+(obj
+ name 'ac
+ version 0
+ type 'patch
+
+ short "Hack the Arc compiler from Arc")

@@ -1,0 +1,121 @@
+; -*- scheme -*-
+
+(obj
+   name 'dyn
+   version 1
+
+   short "dynamic binding that works with exceptions, continuations, and threads"
+   comment "http://arclanguage.org/item?id=9656"
+
+   long
+   `((p ()
+       "MzScheme has a feature called "
+       (a (href "http://download.plt-scheme.org/doc/372/html/mzscheme/mzscheme-Z-H-7.html#node_sec_7.9") "parameters")
+       " which implements a form of dynamic binding.  What’s cool about MzScheme’s implementation is that it works correctly in the presence of exceptions, continuations, and threads, which flummox more naive implementations of dynamic binding.")
+
+     (p ()
+       "Arc uses these MzScheme parameters for stdin and stdout, which is why <code>tostring</code> can locally reassign <code>stdout</code> to be going to a string, but that doesn’t mess up other threads printing to <i>their</i> <code>stdout</code> at the same time.")
+
+     (p ()
+       "This hack provides a light wrapper around MzScheme parameters, allowing dynamic variables to be declared and used in Arc.")
+
+     (p ()
+       "The <code>dynvar</code> macro declares a dynamic variable, with an optional initial value:")
+
+     ,(code "
+  arc> (dynvar a 3)
+  nil
+  arc> (def foo () a)
+  #<procedure: foo>
+  arc> (foo)
+  3
+")
+     (p ()
+       "Much like a macro has to be defined before it can be used, a dynamic variable has to be declared before it’s used:")
+
+     ,(code "
+  arc> (def foo () a)
+  #<procedure: foo>
+  arc> (dynvar a 3)
+  nil
+  arc> (foo)
+  #<primitive:parameter-procedure>
+")
+
+     (p ()
+       "Here we see that <code>foo</code> wasn’t able to get the <i>value</i> of the dynamic variable (instead getting the underlying MzScheme implementation of the variable), because <code>foo</code> was defined before <code>a</code>.")
+
+     (p ()
+       "The <code>dynamic</code> form causes the value of the dynamic variable to be changed during the execution of the <code>dynamic</code>.  This is not a lexical scope, since the change affects any called function that uses the variable:")
+
+     ,(code "
+  arc> (dynvar a 3)
+  nil
+  arc> (def foo () a)
+  #<procedure: foo>
+  arc> (dynamic a 5 (foo))
+  5
+")
+
+     (p () "Outside the <code>dynamic</code>, the variable still has its original value:")
+
+     ,(code "
+  arc> a
+  3
+")
+
+     (p () "The value of the variable can be set while inside the <code>dynamic</code>, and that change will be visible to other functions being called while inside the <code>dynamic</code>, but the change won’t affect the value of the dynamic variable outside:")
+
+     ,(code "
+ arc> (dynvar a 3)
+ nil
+ arc> (def foo () (++ a))
+ #<procedure: foo>
+ arc> (dynamic a 10
+        (prn (foo))
+        (prn (foo))
+        (prn (foo))
+        nil)
+ 11
+ 12
+ 13
+ nil
+ arc> a
+ 3
+")
+
+     (p () "Being “outside” the <code>dynamic</code> includes not only exiting the <code>dynamic</code> normally or with an exception, but also being outside the <code>dynamic</code> with continuations or threads:")
+
+     ,(code "
+ arc> (dynvar a 3)
+ nil
+ arc> (def foo () (++ a))
+ #<procedure: foo>
+ arc> (do (thread (repeat 10
+                     (prn \"thread: \" a)
+                     (sleep 1)))
+          (dynamic a 5
+            (repeat 5
+              (prn (foo))
+              (sleep 2))))
+ 6
+ thread: 3
+ thread: 3
+ 7
+ thread: 3
+ thread: 3
+ 8
+ thread: 3
+ thread: 3
+ 9
+ thread: 3
+ thread: 3
+ 10
+ thread: 3
+ thread: 3
+ nil
+")
+        )
+
+   thanks '(rntz)
+)

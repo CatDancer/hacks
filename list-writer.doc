@@ -1,0 +1,21 @@
+; -*- scheme -*-
+
+(obj
+  name 'list-writer
+  version 1
+
+  short "A writer for Arc lists"
+
+  long
+  (fn ()
+    `((p ()
+        "<code>arc3</code> writes Arc lists by converting them to Scheme lists and printing them using the Scheme writer.  By implementing a writer for Arc values we can build upon this patch to customize the output of Arc values."
+        ;;  The " ,(homepage-ref "table-reader-writer") " patch does this for Arc tables."
+        )
+
+      (p ()
+        "By itself, this patch is supposed to produce the same output as Arc does.  (If it doesn’t, that would be a bug).")))
+
+  bugs
+  '("Attempting to write a list containing a cycle will enter an infinite loop.")
+  )
