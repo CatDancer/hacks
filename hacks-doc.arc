@@ -174,16 +174,16 @@
 (def license (hack)
   (if hack!nolicense
        nil
-      (is hack!type 'patch)
-       `((h3 () "license")
-          ; (p () "The original Arc source is copyrighted by Paul Graham and Robert Morris and licensed under the Perl Foundations's Artistic License 2.0 as described in the “copyright” file in the Arc distribution.")
+;;       (is hack!type 'patch)
+;;        `((h3 () "license")
+;;           ; (p () "The original Arc source is copyrighted by Paul Graham and Robert Morris and licensed under the Perl Foundations's Artistic License 2.0 as described in the “copyright” file in the Arc distribution.")
 
-          (p () "My changes to Arc (this patch that I wrote) are in the "
-             (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")
-             ".")
+;;           (p () "My changes to Arc (this patch that I wrote) are in the "
+;;              (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")
+;;              ".")
 
-          ;(p () "The <i>combination</i> of the original Arc and my changes together (what you get after you apply my patch) is also licensed under the Perl Foundations's Artistic License 2.0."))
-          )
+;;           ;(p () "The <i>combination</i> of the original Arc and my changes together (what you get after you apply my patch) is also licensed under the Perl Foundations's Artistic License 2.0."))
+;;           )
       (isnt hack!type 'howto)
        `((h3 () "license")
          (p () (a (href "http://creativecommons.org/licenses/publicdomain/") "public domain")))))

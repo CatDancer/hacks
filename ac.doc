@@ -5,4 +5,7 @@
  version 0
  type 'patch
 
- short "Hack the Arc compiler from Arc")
+ short "Hack the Arc compiler from Arc"
+
+ long
+ `((p () "The title is more aspiration than reality at this point :-)  But as I find ways to make my hacks shorter by exposing bits of the Arc compiler inside of Arc, this is a place to put them.")))
