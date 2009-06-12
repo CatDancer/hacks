@@ -8,4 +8,37 @@
  short "Hack the Arc compiler from Arc"
 
  long
- `((p () "The title is more aspiration than reality at this point :-)  But as I find ways to make my hacks shorter by exposing bits of the Arc compiler inside of Arc, this is a place to put them.")))
+ `((p ()
+     "The title “Hack the Arc compiler from Arc” is more aspiration than reality at this point :-)  But as I find ways to make my hacks shorter by exposing bits of the Arc compiler inside of Arc, this is a place to put them.")
+
+   (h4 () "ac-scheme")
+
+   (p ()
+     "The <code>ac-scheme</code> syntax quotes an expression, protecting it from being compiled by the Arc compiler.  The expression is passed through unchanged to the MzScheme language that Arc is written in, and thus is interpreted as an MzScheme expression by MzScheme.")
+
+   ,(code "
+ arc> (ac-scheme (let ((a 3))
+                   (+ a 20)))
+ 23
+")
+
+   (p ()
+     "What works and doesn’t work inside an <code>ac-scheme</code> expression is highly dependent on the precise details of how Arc code is compiled into Scheme code.  For example, the arc3 compiler happens to compile an Arc lexical scope into an MzScheme lexical scope, and keeps the same variable names:")
+
+   ,(code "
+ arc> (let a 4
+        (ac-scheme (* 2 a)))
+ 8
+")
+   (p ()
+     "but this could completely change in another release of Arc.")
+
+   (p ()
+     "An Arc macro can expand into an <code>ac-scheme</code> form, and so can generate the Scheme code which is tunneled through the Arc compiler.")
+
+   (h4 () "ac-global-name")
+
+   (p ()
+      "<code>ac-global-name</code> takes an Arc global variable name, and returns the name of the global variable inside of MzScheme.")
+
+))
