@@ -3,6 +3,7 @@
 (obj
  name 'defvar
  version 0
+ comment "http://arclanguage.org/item?id=9708"
 
  short "Provide your own implementation for a global variable"
 
