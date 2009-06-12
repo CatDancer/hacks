@@ -4,7 +4,7 @@
    name 'dyn
    version 1
 
-   short "dynamic binding that works with exceptions, continuations, and threads"
+   short "Dynamic binding that works with exceptions, continuations, and threads"
    comment "http://arclanguage.org/item?id=9656"
 
    long

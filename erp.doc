@@ -1,0 +1,41 @@
+; -*- scheme -*-
+
+(obj
+ name 'erp
+ version 0
+ comment "http://arclanguage.org/item?id=8726"
+
+ short "My favorite debug print macro"
+
+ long
+ `((p () "Consider the typical debug print statement:")
+
+   ,(code "(prn \"foo: \" foo)")
+
+   (p () "notice the redundancy... I want to see what value I&rsquo;m printing out, so I have to type " ,(qu "foo") " twice.")
+
+   (p () "<code>erp</code> is a macro prints out its argument, both literally and what it evaluates to. And, it returns the result as well, so it can be inserted in the middle of some code.")
+
+   (p () "The message is printed to stderr so that <code>erp</code> can be called from inside of a <code>defop</code>, and the message will print on Arc&rsquo;s REPL instead of appearing in the middle of the web page.")
+
+   (p () "For example, if I&rsquo;m looking at")
+
+   ,(code " (+ 3 (/ 4 2) 5)")
+
+   (p () "and I&rsquo;m thinking, " ,(qu "wait, what is <code>(/ 4 2)</code> evaluating to again?") ", I stick in <code>erp</code>:")
+
+   ,(code "
+ arc> (+ 3 (erp (/ 4 2)) 5)
+ (/ 4 2): 2
+ 10
+ arc>")
+
+   (p () "As drcode pointed out to me, by using Arc&rsquo;s colon syntax we can even avoid the extra parentheses:")
+
+   ,(code "
+ arc> (+ 3 (erp:/ 4 2) 5)
+ (/ 4 2): 2
+ 10
+ arc>")
+
+   (p () "Why " ,(qu "<code>erp</code>") "? Well, A) it&rsquo;s short for " ,(qu "stderr print") ", and B) it&rsquo;s what I&rsquo;m usually thinking in the middle of a debug session... :-)")))

@@ -1,0 +1,15 @@
+; -*- scheme -*-
+
+(obj
+ name 'exit-on-eof
+ version 1
+
+ short "Exit Arc with eof (^D in Unix)"
+
+ long
+ `(,(code "
+$ mzscheme -m -f as.scm
+Use (quit) to quit, (tl) to return here after an interrupt.
+arc> ^D
+$
+")))

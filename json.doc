@@ -1,0 +1,34 @@
+; -*- scheme -*-
+
+(obj
+ name 'json
+ version 2
+ comment "http://arclanguage.org/item?id=8896"
+
+ short "JSON reader / writer"
+
+ long
+ `((p () "<a href=\"http://json.org/\">JSON</a> is a lightweight data-interchange format.  It is a subset of JavaScript, and so is especially popular for web applications.")
+
+   ,(code "
+ arc> (prn:tojson `(1 \"a\" ,(obj x 'null y 'true)))
+ [1,\"a\",{\"y\":true,\"x\":null}]
+
+ arc> (fromjson \"[true,false,null,[],42]\")
+ (t nil nil nil \"42\")
+")
+   )
+
+ versions
+ `(ul ()
+    (li () "v2: removed an unnecessary dependency on the mz patch")
+    (li () "v1: fixed encoding of control characters")
+    (li () "v0: initial version"))
+         
+ bugs
+ '("fromjson returns numbers as an unparsed string."
+   "Whitespace is not parsed."
+   "fromjson does not distinguish between <code>false</code>, <code>null</code>, and the empty array, if that&rsquo;s something you need for your application."
+   "tojson does not recognize non-integer numbers."
+   "Lots of duplicate and ugly code in the implementation.")
+ )

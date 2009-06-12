@@ -1,0 +1,36 @@
+; -*- scheme -*-
+
+(obj
+ name 'load-rename
+ version 1
+ title 'load-w/rename
+ comment "http://arclanguage.org/item?id=9202"
+
+ short "Load an Arc source code file with renames"
+
+ long
+ `((p () "thaddeus wanted to use my JSON library, but it defined a function called “alt” which conflicted with another library he was using that had a function with the same name.")
+
+   (p () "Conventionally, libraries are supposed to carefully hide away their internals to avoid just this kind of conflict.  There’s a couple of problems with this approach though:")
+    
+   (ul ()
+     (li () "The library author doesn’t <i>know</i> how the library is going to be used, so the effort made to avoid conflicts is speculative: time may be spent hiding a function which as it turns out never would have caused a conflict in the future, or if the function <i>hadn’t</i> been hidden away it might have turned out to be useful to other code in ways that the library author hadn’t thought of.")
+     (li () "Even after going to the extra work and attendent code complication of hiding library internals, the library may <i>still</i> be making names visible which conflict with some future use of the library."))
+
+   (p ()
+      "Thus the problem with the conventional approach is that the library author is being asked to take responsibility for avoiding conflicts at the time the library is written, when it is impossible to know what actually needs to be done to avoid conflicts because the actual conflicts can’t be known until the library is used with other software.")
+
+   (p ()
+      "Whether or not the library author has attempted to avoid conflicts by hiding library internals, if a conflict does occur then it falls upon the programmer using the library to resolve the conflict.")
+
+   (p ()
+      "One approach to resolve the conflict is to simply rename the offending function or macro in the library, giving it a name that doesn't conflict with the other code being used.")
+
+   (p ()
+      "Naturally if there’s some renaming that needs to be done, we’d prefer to let the computer do it for us rather than tediously having to go through the library source code doing the renaming by hand.")
+
+   ,(code "
+ (load-w/rename \"json.arc\" '((alt json-alt)))
+")
+
+    ))

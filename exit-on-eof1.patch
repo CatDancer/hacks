@@ -1,0 +1,14 @@
+diff --git a/ac.scm b/ac.scm
+index d37a67d..0d23768 100644
+--- a/ac.scm
++++ b/ac.scm
+@@ -1068,6 +1068,9 @@
+             (tl2))
+     (lambda ()
+       (let ((expr (read)))
++        (if (eof-object? expr)
++             (begin (newline)
++                    (exit)))
+         (if (eqv? expr ':a)
+             'done
+             (let ((val (arc-eval expr)))

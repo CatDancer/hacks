@@ -34,8 +34,18 @@
 (= hacks* (map snag
   '(ac
     list-writer
+    table-reader-writer
+    defvar
     dyn
+    srv-mime
+    erp
+    exit-on-eof
+    toerr
+    json
+    extend
+    load-rename
     emacs-utf8
+    nil-impl-by-null
     )))
 
 (def gen-bugs (hack)
@@ -53,9 +63,12 @@
   (or hack!homepage
       (string hack!name ".html")))
 
+(def title (hack)
+  (string (or hack!title hack!name)))
+
 (def homepage-ref (h)
   (let hack hack.h
-    `(a (href ,(homepage hack)) ,(string:or hack!title hack!name))))
+    `(a (href ,(homepage hack)) ,(title hack))))
 
 (def patch-url (hack)
   (string "http://hacks.catdancer.ws/" (tagname hack) ".patch"))
@@ -99,10 +112,12 @@
 ;;         " (" (a (href ,(lib-url hack)) "download") ")")
 ;;       (li () ,(github-repo hack)))))
       
-(def hack (name)
+(def hackof (name)
   (if (isa name 'table)
        name
        (or (find [is _!name name] hacks*) (err "no hack found with name" name))))
+
+(= hack hackof)
 
 (def gen-contains (h)
   (aif h!contains
@@ -192,8 +207,29 @@
 (def show (hack/tag)
   (trues [show-file hack/tag _] '(patch arc)))
 
+(def needs0 (hack)
+  (alref needs* (tag hack)))
+
+(def fetch-arc0 (tag)
+  (if (iso tag '(arc 2))
+       (string
+        "wget http://ycombinator.com/arc/arc2.tar\n"
+        "tar xf arc2.tar\n"
+        "cd arc2\n")
+      (iso tag '(arc 3))
+       (string
+        "wget http://ycombinator.com/arc/arc3.tar\n"
+        "tar xf arc3.tar\n"
+        "cd arc3\n")))
+
+(def fetch-arc (hack)
+  (aif (find (fn ((tag version))
+               (is tag 'arc))
+             (needs0 hack))
+        (fetch-arc0 it)))
+
 (def needs (hack)
-  (+ (alref needs* (tag hack)) (list (tag hack))))
+  (+ (needs0 hack) (list (tag hack))))
 
 (def patches (hack)
   (keep [has _ 'patch] (needs hack)))
@@ -203,6 +239,19 @@
 
 (def sstr (xs)
   (if xs (apply string xs)))
+
+(def prerequisites (hack)
+  (aif (rem (fn ((name version)) (is name 'arc)) (needs0 hack))
+        `((h3 () "prerequisites")
+          (ul ()
+            ,@(map (fn ((name version))
+                     (let hack (hackof name)
+                       `(li ()
+                          (a (href ,(homepage hack))
+                            ,(title hack)
+                            ": "
+                            ,(esc hack!short)))))
+                   it)))))
 
 (def get-patches (hack)
   (sstr
@@ -230,17 +279,12 @@
                    "\n"))
          (arcs hack))))
 
-(def get-arc3 ()
-  (string
-   "wget http://ycombinator.com/arc/arc3.tar\n"
-   "tar xf arc3.tar\n"
-   "cd arc3\n"))
-
 (def get-this (hack)
-  (aif (or (get-patches hack)
+  (aif (or (fetch-arc hack)
+           (get-patches hack)
            (get-arcs hack))
         (string
-         (get-arc3)
+         (fetch-arc hack)
          (get-patches hack)
          (get-arcs hack)
          (aif (load-arcs hack)
@@ -257,25 +301,25 @@
     ,(if (is hack!type 'howto)
           `(h2 () ,(esc hack!short))
 
-          `((h1 () ,(esc (string:or hack!title hack!name)))
+          `((h1 () ,(esc (title hack)))
             (h2 () ,hack!short)))
     ,(show hack)
     ,(aif (if (isa hack!long 'fn) (hack!long) hack!long)
            `(,@(unless hack!nodescription `((h3 () "description")))
              ,@it))
     ,(gen-bugs hack)
-    ,(gen-contains hack)
     ;; ,(aif (get-hack hack) `((h3 () "Get This Hack") ,it))
     ;; ,(apply-hack hack)
     ,@(aif hack!thanks
             `((h3 () "thanks")
                 (p () "My thanks to " ,(string (car it)) " for help with this hack!")))
+    ,@(prerequisites hack)
     ,(get-hack hack)
     ,@hack!get
     ,(comment-on-hack hack)
     ,(license hack)
     ,(aif hack!versions
-       `((h3 () "Versions")
+       `((h3 () "versions")
          ,it))))
 
 ;; (def make-patch (tag)

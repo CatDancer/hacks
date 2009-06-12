@@ -1,0 +1,36 @@
+diff --git a/arc.arc b/arc.arc
+index 3ae2830..63d2013 100644
+--- a/arc.arc
++++ b/arc.arc
+@@ -993,6 +993,14 @@
+       (cons (tree-subst old new (car tree))
+             (tree-subst old new (cdr tree)))))
+ 
++(def tree-substs (substs tree)
++  (aif (alref substs tree)
++        it
++       (atom tree)
++        tree
++        (cons (tree-substs substs (car tree))
++              (tree-substs substs (cdr tree)))))
++
+ (def ontree (f tree)
+   (f tree)
+   (unless (atom tree)
+@@ -1406,11 +1414,14 @@
+        (pr ,@(parse-format str))))
+ )
+ 
+-(def load (file)
++(def load (file (o transform idfn))
+   (w/infile f file
+     (w/uniq eof
+       (whiler e (read f eof) eof
+-        (eval e)))))
++        (eval (transform e))))))
++
++(def load-w/rename (file substs)
++  (load file (fn (e) (tree-substs substs e))))
+ 
+ (def positive (x)
+   (and (number x) (> x 0)))

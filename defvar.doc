@@ -1,0 +1,45 @@
+; -*- scheme -*-
+
+(obj
+ name 'defvar
+ version 0
+
+ short "Provide your own implementation for a global variable"
+
+ long
+ `((p ()
+     "This hack provides for a way to provide your own implementation for a global variable, to say what happens when the variable is used or set:")
+
+   ,(code "
+ arc> (def foo ()
+        (prn \"This is foo, I'm going to return 5.\")
+        5)
+ #<procedure: foo>
+ arc> (defvar a foo)
+ nil
+ arc> (+ a 3)
+ This is foo, I'm going to return 5.
+ 8
+")
+
+   (p ()
+     "<code>foo</code> is now providing the implementation for the global variable <code>a</code>; when the variable is used in an expression, <code>foo</code> is called and the value of the variable is what is returned by <code>foo</code>.")
+
+   (p ()
+     "If the variable is set, the implementing function is called with a single argument, the value the variable is being set to:")
+
+   ,(code "
+ arc> (def foo args
+        (if args
+             (prn \"Being set to \" (car args) \".\")
+             (do (prn \"Returning 5.\")
+                 5)))
+ #<procedure: foo>
+ arc> (defvar a foo)
+ nil
+ arc> (++ a)
+ Returning 5.
+ Being set to 6.
+ 6
+")
+   ))

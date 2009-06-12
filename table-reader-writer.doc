@@ -1,0 +1,23 @@
+ (obj
+  name 'table-reader-writer
+  version 1
+
+  comment "http://arclanguage.org/item?id=9131"
+
+  short "A reader / writer for Arc tables"
+
+  long
+
+  `((p ()
+      "This patch to Arc adds a reader and writer for Arc tables so that they are printed out in a way that they can be read back in.")
+
+    (p ()
+      "The syntax is an unstructured list of keys and values within curly braces:")
+
+    ,(code " arc> (obj \"Boston\" 'bos \"San Francisco\" 'sfo \"Paris\" 'cdg)
+ {\"San Francisco\" sfo \"Paris\" cdg \"Boston\" bos}
+ arc> {\"San Francisco\" sfo \"Paris\" cdg \"Boston\" bos}
+ {\"San Francisco\" sfo \"Paris\" cdg \"Boston\" bos}")
+
+    (p ()
+      "Unlike tables read using MzScheme’s <code>#hash((...))</code> syntax, tables read in by this reader can be modified.")))

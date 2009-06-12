@@ -1,0 +1,12 @@
+; -*- scheme -*-
+
+(obj
+ name 'srv-mime
+ version 1
+ comment "http://arclanguage.org/item?id=9311"
+
+ short "Fix mime types in srv.arc"
+
+ long
+ `((p () "This hack fixes the Content-Type MIME types produced for static files with the .css and .txt extensions.")
+   ))

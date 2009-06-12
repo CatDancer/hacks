@@ -1,0 +1,26 @@
+; -*- scheme -*-
+
+(obj
+ name 'nil-impl-by-null
+ version 0
+ comment "http://arclanguage.org/item?id=9300"
+
+ short "Speculative patch implementing Arc's nil with MzScheme's null"
+
+ long
+ `((p ()
+     "This rough patch to arc2 tries out implementing Arc’s <code>nil</code> internally with MzScheme’s <code>null</code> <code>'()</code>, instead of using MzScheme's <code>nil</code> symbol.")
+
+   (p ()
+     "From inside of Arc nothing has changed: lists are still terminated by <code>nil</code>, <code>nil</code> is still a symbol, <code>nil</code> still reads and prints as <code>nil</code>, and so on.  Only the internal representation of <code>nil</code> has changed.")
+
+   (p ()
+     "This simplifies the Arc compiler since it doesn’t have to convert back and forth between <code>nil</code> and <code>'()</code> all the time.")
+   )
+
+ bugs
+ '("I took a weed-wacker to ac.scm and blindly removed all the ac-denil’s and ac-niltree’s.  I did no analysis of the code I was changing, so I expect I probably messed some things up. The extent of my testing was to run the patched Arc on one of my web pages and see that it didn’t crash.  But hey, it ran 7% faster."
+     "I see one mistake already: I took out the check for setting nil when I should have changed it to check for setting '()."
+
+     "This patch depends on the list-writer patch to print <code>nil</code> as <code>nil</code>, and so shares that patch’s bug that writing lists containing cycles will go into an infinite loop.")
+ )
