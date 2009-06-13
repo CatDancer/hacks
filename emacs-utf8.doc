@@ -11,7 +11,7 @@
    `((p ()
        "The usual ways for telling Emacs to save files in UTF-8 format don’t work when saving a file with a “.arc” extension (at least in the version of Emacs I have).  Apparently there was some ancient file archive format that had a “.arc” extension, so Emacs is quite determined to save the file in a binary mode.  This writes out the Unicode characters in Emacs’ internal character representation, resulting in garbage.")
 
-     (p () "Here’s an incantation to fix this:")
+     (p () "Here’s how to fix this:")
 
      (ol ()
        (li () "Type M-x customize-variable RET auto-coding-alist RET")
