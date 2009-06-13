@@ -15,7 +15,7 @@
 
      (ol ()
        (li () "Type M-x customize-variable RET auto-coding-alist RET")
-       (li () "Click on the first “INS” button.")
+       (li () "Click on the first “INS” button (the one at the top).")
        (li () "For “File name regexp”, type <code>\\.arc\\'</code><br>(that’s backslash dot A R C backslash single-quote)")
        (li () "For “Coding system”, type <code>utf-8</code>")
        (li () "Click on the “Save for Future Sessions” button."))
