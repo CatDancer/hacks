@@ -1,0 +1,11 @@
+(mac edef (name parms . body)
+  (let p (uniq)
+  `(def ,name ,p
+     (on-err (fn (c)
+               (w/stdout (stderr)
+                 (pr ',name " ")
+                 (write ,p)
+                 (pr " ")
+                 (prn c))
+               ((mz raise) c))
+             (fn () (apply (fn ,parms ,@body) ,p))))))

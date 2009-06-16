@@ -22,6 +22,13 @@
 
 (= arc* "/tmp/arc")
 
+(do ((mz current-directory) "/tmp")
+    (system "rm -rf arc arc3 arc3.tar")
+    (system "tar xf ~/download/arc3.tar")
+    (system "mv arc3 arc")
+    (system "cp -v ~/git/hacks/as2.scm arc/")
+    )
+
 (def writen (x s)
   (write x s)
   (disp #\newline s))
