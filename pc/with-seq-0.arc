@@ -1,0 +1,5 @@
+(mac with-seq (vars-parsers . body)
+  (withs (ps (pair vars-parsers)
+          vars (map car ps)
+          parsers (map cadr ps))
+    `(on-result (fn (,vars) ,@body) (seq ,@parsers))))

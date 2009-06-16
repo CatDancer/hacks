@@ -1,0 +1,8 @@
+(def show-parse (parser str)
+  (let p (coerce str 'cons)
+    (iflet (p2 r) (parser p)
+      (do (pr "match: ")
+          (write r)
+          (prn " remaining: " (coerce p2 'string)))
+      (prn "no match")))
+  nil)

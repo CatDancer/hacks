@@ -1,0 +1,919 @@
+; -*- scheme -*-
+
+(obj
+ name 'parser-combinator-approach-to-json
+ notitle t
+ nodescription t
+ nolicense t
+ comment "http://arclanguage.org/item?id=9765"
+
+ short "a parser-combinator approach to parsing JSON"
+
+ long
+ `(
+
+(h4 () "How I learned how to create parser combinators")
+
+(p () "Powerful, succinct code is built by combining small pieces into larger ones: functions out of functions, macros out of functions, macros out of macros... Here I describe how I learned how to use a powerful combinator technique: creating a parser with parser combinators.")
+
+(h4 () "Parser combinators")
+
+(p () "A parser combinator library lets you build larger parsers out of smaller ones.  For example, a simple <code>alphanum</code> parser could recognize a single letter or digit character; a <code>many1</code> parser combinator could take an existing parser and return a parser that recognized one or more instances of what the existing parser recognized, and then <code>(many1 alphanum)</code> would match one or more letters or digits.")
+
+(h4 () "My first attempt at a parser combinator library")
+
+(p ()
+   "When I needed to read and write "
+   (a (href "http://json.org/") "JSON")
+   " from Arc last year, I wrote a "
+   (a (href "json.html") "JSON reader/writer library")
+   ".  I had two goals: one, I simply needed to get a working library; two, I was curious to see if I could learn how to write a parser combinator library, so that the JSON library code would be simple, clear, and straightforward.")
+
+(p ()
+   "I can often create a library by first writing some working code, and then factoring common functionality out of the code to create the library.  This is helpful because it means the library does what I need it to do to support my code, and at each step I have a complete working system that I can test to make sure I’m not making any mistakes.  But with the first version of my JSON library, I ended up with code like")
+
+,(code "
+(def match-json-string (j)
+    (if (is car.j #\\\")
+         (let (j a)
+              ((afn (j a)
+                 (if no.j (err \"missing close quote\"))
+                 (if (is car.j #\\\")
+                      (list cdr.j a)
+                      (iflet (j c) (match-json-backslash j)
+                        (self j (cons c a))
+                        (self (cdr j) (cons (car j) a)))))
+               cdr.j nil)
+           (list j (coerce rev.a 'string)))))
+")
+
+(p () "which, no matter how much I stared at it, I wasn’t able to figure out how to factor anything useful out.")
+
+(p () "I got some help on the Arc forum, and rather than passing the parse position around explicitly, we instead used an input stream to keep track of the parse position for us:")
+
+,(code "
+(def match-json-string ()
+    (match-char #\\\"
+      (liststr:accum a
+        (while (~match-char #\\\")
+          (atend-err \"missing close quote\")
+          (a (or (match-json-backslash)
+                 (readc (stdin))))))))
+")
+
+(p () "This version is much better: we can now easily see that a JSON string starts and ends with a quote character, and contains a sequence of regular characters and backslash escape sequences.")
+
+(p () "I could have continued and written the rest of the JSON parsing library in this style.  However, I remained intrigued by the idea of parser combinators, so I thought I’d try again, this time from the very beginning.")
+
+(h4 () "My next try")
+
+(p ()
+   "In a parser combinator library, all the parser functions need to be able to be called in the same way so that they can be plugged in to the parser combinators, and the parsers returned by the parser combinators also need to use that same interface, so that <i>they</i> in turn can be plugged in to more parser combinators to build up a complete parser.  Thus the choice of what interface to use is a key decision for a parser combinator library.")
+
+(p ()
+   "For my JSON library, I needed to be able to compose return values, as JSON values can recursively contain other JSON values.  So I chose an interface where a parser is passed a parse position, and if it matches the input, returns a new parse position and a return value, and returns nil if it doesn't match the input.")
+
+(p ()
+   "This is hardly the only interface that could be chosen.  The interface could use a continuation passing style, where the parser is passed a success function and a failure function to call with the parse result.  A library could drop the return value from the interface if return values didn’t need to be composed for that application.  Other applications might want a parser combinator library that had something else in the interface that supported some other need they had.")
+
+(p ()
+   "The parse position can also be represented in different ways.  One choice is an integer position within the input string.  For convenience I convert the input string to a list of characters, and then use a cons cell within the list can be used itself for the parse position.  So that I can easily see when I’m returning a result, I’ll make <code>return</code> a synonym for <code>list</code>:")
+
+,(code (ef "pc/return-0"))
+
+(p ()
+   "Here’s a parser that matches the letter A, and has <code>\"found A!\"</code> as its return value if it succeeds:")
+
+,(example '("pc/return-0.arc") (list
+(ef "pc/match-a-0")
+"
+(match-a '(#\\a #\\b #\\c))
+"
+"
+(match-a '(#\\d #\\e #\\f))
+"
+))
+
+(p ()
+   "The higher order parser combinator functions just pass the parser position around without looking at it, so they can be used whether <code>p</code> is a cons cell, an integer position in the input string, or something else.")
+
+(h4 () "Displaying the parse result")
+
+(p () "Next is a convenience function to convert a string into a list of characters, run a parser against it, and display the result:")
+
+,(example '("pc/return-0.arc" "pc/match-a-0.arc") (list
+(ef "pc/show-parse-0")
+"
+(show-parse match-a \"abc\")
+"
+"
+(show-parse match-a \"def\")
+"
+))
+
+(h4 () "Matching JSON literals")
+
+(br ())
+
+(img (src "http://json.org/value.gif"))
+
+(p () "Matching a JSON “<code>true</code>” and returning <code>t</code> on a successful match is easy:")
+
+,(example '("pc/return-0.arc" "pc/show-parse-0.arc" "pc/json-true-0.arc") (list
+(ef "pc/json-true-0")
+"
+(show-parse json-true \"true,1,2,3\")
+"
+"
+(show-parse json-true \"1,2,3\")
+"))
+
+(p ()
+   "To match any literal string, I can factor out the string that’s being matched and the return value:")
+
+,(code (ef "pc/match-literal-0"))
+
+(p ()
+   "and make parsers for the JSON literals:")
+
+,(code (ef "pc/json-literals-0"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc")
+(list
+"
+(show-parse json-false \"false\")
+"))
+
+(h4 () "alt")
+
+(p ()
+   "I come to my first parser combinator.  I want to be able to try a series of alternatives, until I find one that matches:")
+
+,(code (ef "pc/json-value-0"))
+
+(p ()
+   "I need to go through a list of parsers, and call each one on the parse position until I get one that doesn’t return <code>nil</code>, and return what it returns.  Arc’s <code>some</code> function makes this easy:")
+
+,(code (ef "pc/alt-0"))
+
+(p ()
+   "Now I have a <code>json-value</code> parser that will match any of the JSON literals:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/alt-0.arc"
+            "pc/json-value-0.arc")
+          (list
+"
+(show-parse json-value \"true,1,2\")
+"
+"
+(show-parse json-value \"false,1,2\")
+"))
+          
+(h4 () "JSON numbers")
+
+(p () "Like the <code>match-literal</code> parser that manually looks forward in the input stream to see if it matches a literal string, I could write a parser that manually matches JSON number characters in the input stream.  What I’d like to do is make a <code>many1</code> parser combinator, which matches one or more instances of something:")
+
+,(code (ef "pc/json-number-0"))
+
+(p () "where <code>json-number-char</code> is a parser that matches one JSON number character:")
+
+,(code (ef "pc/json-number-char-0"))
+
+(p () "and <code>match</code> takes a predicate function.  It succeeds returning the next item in the input if the function returns true when called with that item:")
+
+,(code (ef "pc/match-0"))
+
+(h4 () "many1")
+
+(p () "So what about <code>many1</code>?  If I had a parser combinator <code>many</code> which matched <i>zero</i> or more things, and a combinator <code>seq</code> that matched several parsers in sequence (first thing A, then thing B, etc.), then I could write <code>many1</code> as:")
+
+,(code (ef "pc/many1-0"))
+
+(p () "which says that one way of matching one or more of something is to match one of them, followed by zero or more of that something.")
+
+(p () "Wow!  Great!  Progress!  Now if only I had <code>seq</code> and <code>many</code>...")
+
+(h4 () "seq")
+
+(p () "The <code>seq</code> combinator takes a list of parsers, and applies them one after another to the input.  The whole sequence only succeeds if all of the parsers succeed.  And, for the return value, I want to get a list of what each of the parsers returned.")
+
+(p () "OK, so I’m going to need to loop through the parsers.  The parse position is going to change each time, as each parser in turn successfully matches some input.  And I’ll need a variable for the accumulated result, which starts off as <code>nil</code>:")
+
+,(code "
+(def seq parsers
+  (fn (p)
+    ((afn (p parsers a)
+       ...)
+     p parsers nil)))
+")
+
+(p () "If I’ve gotten through all the parsers, the <code>parsers</code> list will now be empty, which means all the parsers matched successfully, and so I can return the result.  I’ll be cons’ing up the result as I go through the loop, so I’ll use <code>rev</code> to get “123” instead of “321”:")
+
+,(code (ef "pc/seq-0"))
+
+(p () "Hey, I’m making progress!  I can <i>already</i> call <code>seq</code> on an empty parser list, and have it match no things and successfully return an empty list:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/seq-0.arc")
+          (list
+"
+(show-parse (seq) \"123\")
+"))
+
+(p () "Impressive, yes? :-)")
+
+(p () "If there are some more parsers left, I need to call the next one, getting the new parse position and its return value.  I’ll use <code>iflet</code>, so if the parser fails to match and returns <code>nil</code>, I’ll fall out of the whole loop returning <code>nil</code> from the parser created by <code>seq</code>, so that if any of the parsers fail then the entire match fails:")
+
+,(code "
+(iflet (p2 r) (car.parsers p)
+  ...)
+")
+
+(p () "If the match succeeds, then I need to loop again with the new parse position, the next parser on the list, and add the return value to the accumulator:")
+
+,(code "
+(iflet (p2 r) (car.parsers p)
+  (self p2 cdr.parsers (cons r a)))
+")
+
+(p () "Putting it all together, I get:")
+
+,(code (ef "pc/seq-1"))
+
+(p () "Let’s try it out:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/seq-1.arc")
+          (list (ef "pc/seq-ex0")))
+
+(p () "Nifty.  So, anyone see a way to make the <code>seq</code> function shorter?")
+
+(h4 () "many")
+
+(p () "I’m not sure how to implement <code>many</code>, so I’ll start with something simpler.  <code>optional</code> matches zero or one things:")
+
+,(code "
+(def optional (parser)
+  (fn (p)
+    (iflet (p2 r) (parser p)
+      ...)))
+")
+
+(p () "If the match succeeds, then I’ll want to return what the parser returned.  Since I’m working towards <code>many</code>, and I’ll want <code>many</code> to return a list of the return values for each time the parser matches, I’ll have <code>optional</code> return a list of the one return value:")
+
+,(code "
+(def optional (parser)
+  (fn (p)
+    (iflet (p2 r) (parser p)
+      (return p2 (list r))
+      ...)))
+")
+
+(p () "If the parser doesn’t match, then the <code>optional</code> still succeeds, since it matches <i>zero</i> or one things, so I’ll have it return the empty list:")
+
+,(code (ef "pc/optional-0"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/optional-0.arc")
+          (list
+"
+(show-parse (optional json-number-char) \"123\")
+"
+"
+(show-parse (optional json-number-char) \"a123\")
+"))
+
+(p () "So <code>many</code> is like <code>optional</code>, except that it applies the parser to the input over and over again until finally the match fails:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc")
+          (list
+(ef "pc/many-0")
+"
+(show-parse (many json-number-char) \"abc\")
+"
+"
+(show-parse (many json-number-char) \"1abc\")
+"
+"
+(show-parse (many json-number-char) \"12abc\")
+"
+"
+(show-parse (many json-number-char) \"123abc\")
+"
+))
+
+(h4 () "many1, implemented")
+
+(p ()
+   "Now I get to try out my implementation of <code>many1</code>:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc")
+          (list
+(ef "pc/many1-0")
+"
+(show-parse (many1 json-number-char) \"123abc\")
+"))
+
+(p ()
+   "The matching part is working perfectly, but I’m getting <code>(r (r ...))</code> for my return value instead of the <code>(r ...)</code> that I want.  That’s because <code>seq</code> is returning a list of the return values of its parsers: the first match and the <code>many</code> match.  I’ll need to modify the return value to cons the two parts together:")
+
+,(code (ef "pc/many1-1"))
+
+(p ()
+   "Now I get the return value I’m looking for:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/many1-1.arc")
+          (list
+"
+(show-parse (many1 json-number-char) \"123abc\")
+"))
+
+(h4 () "JSON numbers, implemented")
+
+(p () "This was my definition for parsing a JSON number:")
+
+,(code (ef "pc/json-number-0"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/many1-1.arc"
+            "pc/json-number-0.arc")
+          (list
+"
+(show-parse json-number \"123abc\")
+"))
+
+(p () "But for the return value I want to get an Arc number, not just the list of parsed characters.  Like with <code>many1</code>, I want to modify the value returned by a parser, and so it’s time to make a function to do that:")
+
+,(code (ef "pc/on-result-0"))
+
+(p () "Now <code>many1</code> can use that:")
+
+,(code (ef "pc/many1-2"))
+
+(p () "Which I can make a bit shorter with a macro:")
+
+,(code (ef "pc/with-result-0"))
+
+,(code (ef "pc/many1-3"))
+
+(p () "For <code>seq</code> specifically, perhaps I’ll often be working with the return value of each of the parsers in the sequence, so I might try a macro for that and see how often it’s used:")
+
+,(code (ef "pc/with-seq-0"))
+
+,(code (ef "pc/many1-4"))
+
+(p () "And finally the implementation of <code>json-number</code>:")
+
+,(code (ef "pc/json-number-1"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/json-number-1.arc")
+          (list
+"
+(show-parse json-number \"123abc\")
+"))
+
+(h4 () "JSON strings")
+
+(br ())
+
+(img (src "http://json.org/string.gif"))
+
+(p ()
+   "I’ll need to be able to parse the four hexadecimal digits after a Unicode escape sequence <code>\\u</code> and turn it into a character:")
+
+,(code (ef "pc/fourhex-0"))
+
+(p ()
+   "Yup, <code>with-seq</code> turned out to be useful.  The <code>must</code> function turns a failed match into an error:")
+
+,(code (ef "pc/must-0"))
+
+(p ()
+   "Let’s see, I’ll need to parse the other JSON backslash escape sequences:")
+
+,(code (ef "pc/json-backslash-char-0"))
+
+(p () 
+   "A JSON string backslash escape sequence is one or the other:")
+
+,(code (ef "pc/json-backslash-escape-0"))
+
+(p () "but oops, <code>seq</code> is giving me lists when all I want is just the character:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/must-0.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-0.arc")
+          (list
+"
+(show-parse json-backslash-escape \"\\\\u0041\")
+"))
+
+(p () "In both cases I want just the return value of the second parser in the sequence, so I’ll make a combinator to do that:")
+
+,(code (ef "pc/seq2-0"))
+
+(p () "And, I can extract a <code>match-is</code>:")
+
+,(code (ef "pc/match-is-0"))
+
+(p () "Now I have:")
+
+,(code (ef "pc/json-backslash-escape-1"))
+
+(p () "That’s better:")
+
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/match-is-0.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc")
+          (list
+"
+(show-parse json-backslash-escape \"\\\\u0041\")
+"
+"
+(show-parse json-backslash-escape \"\\\\/\")
+"
+"
+(show-parse json-backslash-escape \"\\\\\\\"\")
+"
+))
+
+(p ()
+  "Other characters in the string can be anything that isn’t a closing quote:")
+
+,(code "
+(match [isnt _ #\\\"])
+")
+
+(p ()
+   "Now I have an implementation for <code>json-string</code>:")
+
+,(code (ef "pc/json-string-0"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/match-is-0.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc")
+          (list
+"
+(show-parse json-string \"\\\"\\\\u0041b\\\\\\\\c\\\"\")
+"))
+
+(h4 () "JSON arrays")
+
+(br ())
+
+(img (src "http://json.org/array.gif"))
+
+(p () "How to match that?")
+
+(p () "After the first value, any comma has to be followed by another value.  I don’t care about the return value of matching the comma, so I’ll use <code>seq2</code> to get just the return value of the JSON value:")
+
+,(code "
+(seq2 (match-is #\\,)
+      json-value)
+")
+
+(p () "There can be many (zero or more) of those “comma followed by a value” pairs:")
+
+,(code "
+(many (seq2 (match-is #\\,)
+            json-value))
+")
+
+(p () "There does have to be a value before the first comma:")
+
+,(code "
+(seq json-value
+     (many (seq2 (match-is #\\,)
+                 json-value)))
+")
+
+(p () "And the whole thing is optional, because the JSON array might be empty:")
+
+,(code "
+(optional (seq json-value
+               (many (seq2 (match-is #\\,)
+                           json-value))))
+")
+
+(p () "So this is pretty close for matching a JSON array:")
+
+,(code (ef "pc/json-array-0"))
+
+(p () "Just a couple of problems.  JSON arrays can contain JSON values, which can recursively contain JSON arrays...")
+
+,(code (ef "pc/json-value-1"))
+
+(p () "But when I’m defining <code>json-array</code>, I haven’t defined <code>json-value</code> yet...")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-0.arc"
+            "pc/match-is-0.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc")
+          (list
+(ef "pc/json-array-0")))
+
+(p () "Putting <code>json-value</code> first doesn’t help of course, since then it will be <code>json-array</code> that isn’t defined yet.  So, I’ll need to wrap the reference to <code>json-value</code> in a function:")
+
+,(code (ef "pc/json-array-1"))
+
+(p () "Which I can make shorter with a macro:")
+
+,(code (ef "pc/forward-0"))
+
+(p () "Now I can easily have forward references:")
+
+,(code (ef "pc/json-array-2"))
+
+(p () "Next I need to fix the return value:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-0.arc"
+            "pc/forward-0.arc"
+            "pc/match-is-0.arc"
+            "pc/json-number-1.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc"
+            "pc/json-array-2.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/json-value-1.arc")
+          (list
+"
+(show-parse json-value \"[1,2,3]\")
+"))
+
+(p () "Back when I wrote <code>optional</code>, if the parser matched, I put its return value in a list.  Now that I’m actually using <code>optional</code> for the first time, it turns out I don’t want that, I want just the value.  An easy fix:")
+
+,(code (ef "pc/optional-1"))
+
+(p () "But now <code>optional</code> is just returning what the parser returns, so I could write it as:")
+
+,(code (ef "pc/optional-2"))
+
+(p () "Now I get:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/many1-4.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-2.arc"
+            "pc/forward-0.arc"
+            "pc/match-is-0.arc"
+            "pc/json-number-1.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc"
+            "pc/json-array-2.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/json-value-1.arc")
+          (list
+"
+(show-parse json-value \"[1,2,3]\")
+"))
+
+(p () "This is the same pattern I had before with <code>many1</code>: a sequence of A followed by B, and I want to cons the single item returned by A together with the list of items returned by B.  I can extract a <code>parse-cons</code> function for that:")
+
+,(code (ef "pc/cons-seq-0"))
+
+(p () "Now <code>many1</code> is:")
+
+,(code (ef "pc/many1-5"))
+
+(p () "And I get the right return value from a JSON array:")
+
+,(code (ef "pc/json-array-3"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/cons-seq-0.arc"
+            "pc/many1-5.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-2.arc"
+            "pc/forward-0.arc"
+            "pc/match-is-0.arc"
+            "pc/json-number-1.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc"
+            "pc/json-array-3.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/json-value-1.arc")
+          (list
+"
+(show-parse json-value \"[1,2,3]\")
+"))
+
+(h4 () "JSON objects")
+
+(br ())
+
+(img (src "http://json.org/object.gif"))
+
+(p ()
+   "Both JSON arrays and objects have a list of things interspersed by commas; in the case of <code>json-object</code>, it’s key-value pairs.  In <code>json-array</code>, it was JSON values that were separated by commas:")
+
+,(code "
+(optional (cons-seq forward.json-value
+                    (many (seq2 (match-is #\\,)
+                                forward.json-value))))
+")
+
+(p () "I can extract that pattern:")
+
+,(code (ef "pc/parse-intersperse-0"))
+
+(p () "A comma separated list is a specific case:")
+
+,(code (ef "pc/comma-separated-0"))
+
+(p () "Now <code>json-array</code> is:")
+
+,(code (ef "pc/json-array-4"))
+
+(p ()
+   "In a <code>json-object</code>, key-value pairs are separated by a colon, and the key is always a JSON string.")
+
+,(code (ef "pc/json-object-kv-0"))
+
+(p ()
+   "This matches a single key-value pair, and returns them as a two element list:")
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/cons-seq-0.arc"
+            "pc/many1-5.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-2.arc"
+            "pc/forward-0.arc"
+            "pc/match-is-0.arc"
+            "pc/json-number-1.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/parse-intersperse-0.arc"
+            "pc/comma-separated-0.arc"
+            "pc/json-array-4.arc"
+            "pc/json-object-kv-0.arc"
+            "pc/json-value-1.arc")
+          (list
+"
+(show-parse json-object-kv \"\\\"abc\\\":[1,2,3]\")
+"
+))
+
+(p ()
+   "Arc’s <code>listtab</code> will convert a list of those key-value pairs into a table for me:")
+
+,(code (ef "pc/json-object-0"))
+
+(p ()
+   "And now I can add <code>json-object</code> to <code>json-value</code>:")
+
+,(code (ef "pc/json-value-2"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/cons-seq-0.arc"
+            "pc/many1-5.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-2.arc"
+            "pc/forward-0.arc"
+            "pc/match-is-0.arc"
+            "pc/json-number-1.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/parse-intersperse-0.arc"
+            "pc/comma-separated-0.arc"
+            "pc/json-array-4.arc"
+            "pc/json-object-kv-0.arc"
+            "pc/json-object-0.arc"
+            "pc/json-value-2.arc")
+          (list
+"
+(show-parse json-value \"{\\\"a\\\":[1,2,{\\\"b\\\":3}]}\")
+"
+))
+
+(h4 () "fromjson")
+
+(p () "<code>fromjson</code> is the entry point into the JSON parser library.  It takes a string, parses it as a JSON value, and converts it to an Arc value:")
+
+,(code (ef "pc/fromjson-0"))
+
+,(example '("pc/return-0.arc"
+            "pc/show-parse-0.arc"
+            "pc/match-0.arc"
+            "pc/json-number-char-0.arc"
+            "pc/alt-0.arc"
+            "pc/seq-1.arc"
+            "pc/many-0.arc"
+            "pc/on-result-0.arc"
+            "pc/with-result-0.arc"
+            "pc/with-seq-0.arc"
+            "pc/cons-seq-0.arc"
+            "pc/many1-5.arc"
+            "pc/must-0.arc"
+            "pc/seq2-0.arc"
+            "pc/optional-2.arc"
+            "pc/forward-0.arc"
+            "pc/match-is-0.arc"
+            "pc/json-number-1.arc"
+            "pc/fourhex-0.arc"
+            "pc/json-backslash-char-0.arc"
+            "pc/json-backslash-escape-1.arc"
+            "pc/json-string-0.arc"
+            "pc/match-literal-0.arc"
+            "pc/json-literals-0.arc"
+            "pc/parse-intersperse-0.arc"
+            "pc/comma-separated-0.arc"
+            "pc/json-array-4.arc"
+            "pc/json-object-kv-0.arc"
+            "pc/json-object-0.arc"
+            "pc/json-value-2.arc"
+            "pc/fromjson-0.arc")
+          (list
+"
+(fromjson \"{\\\"a\\\":[1,2,{\\\"b\\\":3}]}\")
+"
+))
+
+(h4 () "a work in progress")
+
+(p ()
+   "Here’s the complete JSON parser library as I’ve gotten it to so far.  The parser combinator library code can be found at "
+   (a (href "parsecomb0.arc") "parsecomb0.arc")
+   ".")
+
+(p ()
+   "There’s a few things left to finish: the "
+   (a (href "http://json.org/") "JSON specification")
+   " says that whitespace can be inserted between any pair of tokens, and I could add more <code>must</code> clauses so that, for example, if there’s a missing close quote in a string, we get a more specific error message than that the whole input is “not a JSON value”.")
+
+(p () "Although it’s not really a valid comparison until the library is done, it’s still fun to compare this implementation side-by-side with one of the many JSON libraries listed at the bottom of "
+   (a (href "http://json.org/") "http://json.org/")
+   ".")
+
+,(code (readfilec "~/git/pub/json-parser0.arc"))
+
+))

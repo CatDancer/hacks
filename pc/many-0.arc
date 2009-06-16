@@ -1,0 +1,7 @@
+(def many (parser)
+  (fn (p)
+    ((afn (p a)
+       (iflet (s2 r) (parser p)
+         (self s2 (cons r a))
+         (return p rev.a)))
+     p nil)))

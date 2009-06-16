@@ -1,0 +1,6 @@
+(def match-literal (pat val)
+  (with (patlist (coerce pat 'cons)
+         patlen  len.pat)
+    (fn (p)
+      (if (begins p patlist)
+           (return (nthcdr patlen p) val)))))

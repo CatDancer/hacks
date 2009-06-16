@@ -1,0 +1,5 @@
+(def fromjson (s)
+  (iflet (p r) (json-value (coerce s 'cons))
+    (do (if p (err "Unexpected characters after JSON value" (coerce p 'string)))
+        r)
+    (err "not a JSON value" s)))

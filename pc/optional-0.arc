@@ -1,0 +1,5 @@
+(def optional (parser)
+  (fn (p)
+    (iflet (p2 r) (parser p)
+      (return p2 (list r))
+      (return p nil))))

@@ -17,6 +17,83 @@
   (apply string
     (w/infile i name (drain (readc i)))))
 
+(def ef (name)
+  (readfilec (string "~/git/hacks/" name ".arc")))
+
+(= arc* "/tmp/arc")
+
+(def writen (x s)
+  (write x s)
+  (disp #\newline s))
+
+(def chomp-left (s)
+  (if (begins s "\n")
+       (cut s 1)
+       s))
+
+(def chomp-right (s)
+  (if (endmatch "\n" s)
+       (cut s 0 (- (len s) 1))
+       s))
+
+(def chomp-both (s)
+  (chomp-right (chomp-left s)))
+
+(def display-expr (expr)
+  (pr "arc> ")
+  (each c (chomp-both expr)
+    (if (is c #\newline)
+         (do (prn)
+             (pr "     "))
+         (pr c)))
+  (prn))
+
+(def execute (loads exprs)
+  erp.loads
+  erp.exprs
+  ((mz current-directory) arc*)
+  (w/outfile
+   o "run.arc"
+   (each f loads
+     (writen `(load ,f) o))
+   (each expr exprs
+     (write `(output ,expr) o)
+     (disp #\newline o))
+   (writen '(quit) o))
+  (prn "------")
+  (system "cat run.arc")
+  (prn "------")
+  (prn ">>>")
+  (let s (tostring (system "mzscheme -m -f as2.scm"))
+    (prn "<<<")
+    (disp s)
+    (fromstring s (drain (read)))))
+
+(def example (loads exprs)
+  (prn)
+  (prn)
+  (prn "******************* example")
+  (let rs (execute (cons "~/git/hacks/output.arc"
+                         (map (fn (f)
+                                (string "~/git/hacks/" f))
+                              loads))
+                   exprs)
+    `(blockquote ()
+       ,@(map (fn (in out)
+                (aif (alref out 'error)
+                      `((pre ()
+                          ,(esc:tostring
+                            (display-expr in)
+                            (disp (alref out 'out))
+                            (prn)))
+                        (i () ,(esc it)))
+                      `((pre ()
+                          ,(esc:tostring
+                            (display-expr in)
+                            (disp (alref out 'out))
+                            (disp (alref out 'result)))))))
+              exprs rs))))
+
 (def tag (hack/tag)
   (if (acons hack/tag)
        hack/tag
@@ -46,6 +123,7 @@
     load-rename
     emacs-utf8
     nil-impl-by-null
+    parser-combinator-approach-to-json
     )))
 
 (def gen-bugs (hack)
@@ -301,7 +379,9 @@
     ,(if (is hack!type 'howto)
           `(h2 () ,(esc hack!short))
 
-          `((h1 () ,(esc (title hack)))
+          `(,@(if hack!notitle
+                  `((br ()) (br ()))
+                  `((h1 () ,(esc (title hack)))))
             (h2 () ,hack!short)))
     ,(show hack)
     ,(aif (if (isa hack!long 'fn) (hack!long) hack!long)
@@ -370,7 +450,7 @@ h3 {
 }
 
 h4 {
-  margin-top: 0;
+  margin-top: 1em;
   margin-bottom: 0.5em;
 }
 
@@ -387,7 +467,7 @@ pre, code {
 }
 
 pre {
-  margin-top: 0
+  margin: 0;
 }
 
 td {
